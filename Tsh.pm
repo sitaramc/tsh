@@ -325,11 +325,11 @@ sub parse {
 
         $rc ? ok() : fail("!ok, rc=0 from $lec", $1 || '');
 
-    } elsif ( $cmd =~ m(^/(.*)/(?:\s+or\s+(.*))?$) ) {
+    } elsif ( $cmd =~ m(^/(.*?)/(?:\s+or\s+(.*))?$) ) {
 
         expect($1, $2);
 
-    } elsif ( $cmd =~ m(^!/(.*)/(?:\s+or\s+(.*))?$) ) {
+    } elsif ( $cmd =~ m(^!/(.*?)/(?:\s+or\s+(.*))?$) ) {
 
         not_expect($1, $2);
 
