@@ -1,0 +1,198 @@
+# tsh -- quick and easy testing shell
+
+## why
+
+I got tired of: bash/sh portability issues; writing long, complicated, test
+code; weird shell constructs for simple things; constantly putting in
+`&>/dev/null`; and many more.
+
+The examples may help tell the story better.  A longer example, which also
+shows you how to do TAP stuff, is [here][gpt01].
+
+[gpt01]: https://github.com/sitaramc/gitpod/blob/master/t/t01
+
+## guiding principle
+
+Less typing.  Less output.
+
+## teasers
+
+Here are some teasers.  Details are in later sections.
+
+### shell teasers
+
+Teaser 1 (tedious in shell): "exit unless **both** git-daemon and git-gui RPMs
+are installed"
+
+    tsh "rpm -qa
+        /git-daemon/ or need git-daemon
+        /git-gui/    or need git-gui
+    " || exit 1
+
+Teaser 2 (horrible in shell): "exit if gcc 4 is missing or gcc 3 is installed"
+
+    tsh "rpm -qa
+        /gcc-4/     or please install gcc 4
+        !/gcc-3/    or please remove  gcc 3
+    " || exit 1
+
+The only way I know of to do this in shell, without using at least a temp
+file, is this:
+
+    cat ~/rpm-qa |
+        tee >(grep gcc-3 >/dev/null && echo please remove gcc 3 >&2) |
+        grep gcc-4 >/dev/null || echo please install gcc 4
+
+Ugh!
+
+### perl examples
+
+In perl, instead of calling a *program* called `tsh` you call a *function*
+called `try`.
+
+(Note: the first 5 lines will not be shown in any later examples).
+
+    #!/usr/bin/perl
+    use 5.10.0;
+    use strict;
+    use warnings;
+    use Tsh;
+
+    try "rpm -qa
+        /gcc-4/     or please install gcc 4
+        !/gcc-3/    or please remove  gcc 3
+    " or die;
+
+However, you can **do a lot more** in perl.  See detailed documentation later.
+
+## requirements
+
+perl 5.10.0 or later, and any posix shell that understands very simple
+redirection.
+
+## input
+
+For **shell**, there's little more to be said.  You can supply a single
+filename instead of giving the commands on the command line like we did.  You
+can also supply the commands on STDIN
+
+When you supply more than one argument, each argument is treated as being on a
+separate line.  Commands are separated by newlines as well as by semicolons.
+
+No fancy parsing is done; if you have semicolons inside some string, expect
+trouble.  Patches welcome.
+
+### syntax
+
+You can put one command on each line, or more than one per line if you
+separate them with semicolons.  Comments are allowed in the usual way.
+Leading whitespace is always thrown away, but not elsewhere.  There are no
+continuation lines or include files.
+
+(When you supply commands directly as arguments, each argument is treated as a
+line.  In addition, an argument may itself be multi-line, as the teaser
+examples showed.  All these combinations are treated as multi-line input).
+
+### hashhash comments (testnames)
+
+Comment lines that start with optional whitespace, then `##` (two hash marks)
+then whitespace, are treated as supplying the "name" of that test; see
+the `error_list` function below.  This also serves as a progress report if you
+run it at `TSH_VERBOSE=2` or higher.
+
+## functions available to perl
+
+For **perl**, you can get more information by calling one of these exported
+functions:
+
+  * `rc()` -- return code of the last external command executed
+  * `text()` -- combined STDOUT+STDERR of the last external command
+  * `error_count()` -- number of errors in the last sequence of tsh commands
+  * `error_list()` -- if available, the list of "testnames" (see above) at
+    which errors occurred.
+
+## output
+
+The **return value** fits the language used so you can use it as a boolean as
+usual.  <font color="gray">This means the **actual** value is different in
+perl and in shell, since they have opposite notions of what is "true" and what
+is "false".</font>
+
+STDOUT is only used for TAP related output (see TAP section later).
+
+The 'try()' function prints nothing by default.  The 'tsh' command prints
+nothing on success, but on failure it prints a very brief error summary (like
+"3 error(s)") to STDERR.
+
+In both cases, test-specific messages (see later) are printed to STDERR.
+
+Also in both cases, the TSH_VERBOSE env var changes the output:
+
+  * **0**: (for 'tsh') suppress even the error summary (only exit code).
+  * **1**: print test failure messages and unchecked non-zero return codes
+    (i.e., when an external command fails but its exit code is ignored).
+  * **2**: print each line as it is read.  Also, print the text of the special
+    "hashhash" comments (see "hashhash comments" section earlier).
+  * **3**: print each command as it is read.
+
+(Setting it to 4 produces too much output to be useful most of the time).
+
+## commands in detail
+
+### macros
+
+Every command is first checked if a macro by that name exists.  Your current
+list of macros is shown if you run 'tsh' without any arguments.  With the
+default set of macros, for example, a command of `empty` will run `git commit
+--allow-empty -m empty`.
+
+The rest of the commands described below are checked only after this macro
+expansion.  Macro expansion is attempted even on the result of the previous
+macro expansion, so be careful you don't recurse.
+
+### environment commands
+
+  * `cd ...` -- does a chdir().  Without an argument it goes to `$HOME`
+  * `ENV foo='bar baz'` -- sets the env var foo
+
+### testing commands
+
+  * `ok` -- checks that the previous command's rc was 0
+  * `!ok` -- similar, except negated (check that the rc was *not* 0)
+  * `/pattern/` -- check that the combined STDOUT+STDERR of the last executed
+    command contained a string that matched the pattern
+  * `!/pattern/` -- negated version of above
+
+#### test-specific messages
+
+In addition, each of these can be followed by the word 'or' followed by a
+**test-specific message**, like so:
+
+    ok or hey the last command failed
+
+### git specific commands
+
+  * `tt` -- step the commit timestamps by one minute
+  * `dc foo` -- do a dummy_commit of the file 'foo', appending a fixed known
+    line to it
+
+### external commands
+
+Any command that is not one of the above will be treated as an external
+command.
+
+## TAP compliance
+
+'tsh' is TAP compliant in the sense that you can run it from 'prove',
+supplying the number of tests you expect as argument 1.  So if your input will
+run 35 tests, you can say:
+
+    prove `which tsh` :: 35 input-command-file
+
+If you want to use tsh multiple times from a much larger test driver, then
+just make the driver print out a plan first, and simply run `prove driver`.
+See the test script [here][gpt01] for an example of such a driver.
+
+If you don't run it (directly or indirectly) from prove, it won't produce the
+'ok' or 'not ok' lines.  (Specifically, it checks for the environment variable
+`HARNESS_ACTIVE`, which prove seems to set).

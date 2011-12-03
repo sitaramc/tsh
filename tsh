@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+
+BEGIN {
+    # find and set bin dir
+    $0 =~ m|^(/)?(.*)/| and unshift(@INC, ($1 || "$ENV{PWD}/") . $2);
+}
+
+use Tsh;
+
+Tsh::tsh();
