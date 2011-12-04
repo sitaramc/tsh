@@ -157,6 +157,8 @@ macro expansion, so be careful you don't recurse.
 
 ### testing commands
 
+(Also see the TAP section below for the `plan` command).
+
   * `ok` -- checks that the previous command's rc was 0
   * `!ok` -- similar, except negated (check that the rc was *not* 0)
   * `/pattern/` -- check that the combined STDOUT+STDERR of the last executed
@@ -183,16 +185,17 @@ command.
 
 ## TAP compliance
 
-'tsh' is TAP compliant in the sense that you can run it from 'prove',
-supplying the number of tests you expect as argument 1.  So if your input will
-run 35 tests, you can say:
+'tsh' is will produce `ok` / `not ok` lines if you run it from 'prove', or
+indeed any harness that sets the `HARNESS_ACTIVE` env var.
 
-    prove `which tsh` :: 35 input-command-file
+You will need to supply a plan before the first test.  Just use the `plan N`
+tsh command (where N is the number of tests you plan to run).
 
-If you want to use tsh multiple times from a much larger test driver, then
-just make the driver print out a plan first, and simply run `prove driver`.
-See the test script [here][gpt01] for an example of such a driver.
+You may have guessed that the `plan` command is merely a convenience; if you
+wish, you can check that variable and print the plan yourself.
 
-If you don't run it (directly or indirectly) from prove, it won't produce the
-'ok' or 'not ok' lines.  (Specifically, it checks for the environment variable
-`HARNESS_ACTIVE`, which prove seems to set).
+Note: the ok/not ok messages do not contain the actual, correct, test number,
+because tsh can be invoked multiple times from an outer shell script, and we
+have no clean way to convey the running test number from one invocation to the
+next.  This does *not* affect TAP compliance; at least it works fine with
+`prove`.

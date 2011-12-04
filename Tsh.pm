@@ -63,9 +63,6 @@ use 5.10.0;
 # set the timestamp
     test_tick();
 
-# print TAP plan if harness is active (note: shifts one from @ARGV)
-    print_plan();
-
 # ----------------------------------------------------------------------
 # this is for one-liner access from outside, using @ARGV, as in:
 #   perl -MTsh -e 'tsh()' 'tsh command list'
@@ -181,8 +178,7 @@ sub error_list {
 
 sub print_plan {
     return unless $ENV{HARNESS_ACTIVE};
-    my $_ = shift @ARGV or die "print_plan needs 'number of tests'\n";
-    /^\d+$/ or die "$_ is a bad 'number of tests'\n";
+    my $_ = shift;
     say "1..$_";
 }
 
@@ -297,6 +293,10 @@ sub parse {
     if ( $cmd eq 'tt' ) {
 
         test_tick();
+
+    } elsif ( $cmd =~ /^plan ?(\d+)$/ ) {
+
+        print_plan($1);
 
     } elsif ( $cmd =~ /^cd ?(\S*)$/ ) {
 
