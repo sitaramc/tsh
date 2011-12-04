@@ -34,6 +34,7 @@ use 5.10.0;
     use strict;
     use warnings;
 
+    use Text::Tabs;
     use Text::ParseWords;
 
 # ----------------------------------------------------------------------
@@ -430,8 +431,8 @@ sub cmds {
     chomp; $_ = trim_ws($_);
 
     # a "line" has more than one "command"; split them out and trim WS at ends
-    my @cmds = split /;/;
-    @cmds = grep { $_ = trim_ws($_); /./; } @cmds;
+    my @cmds = grep { defined } parse_line(';', 1, $_);
+    @cmds = grep { $_ = trim_ws($_); /\S/; } @cmds;
     return @cmds;
 }
 
@@ -463,7 +464,6 @@ Meanwhile, here are your local 'macro' definitions:
 ";
     my %m = read_rc_file();
     my @m = map { "$_\t$m{$_}\n" } sort keys %m;
-    use Text::Tabs;
     $tabstop = 16;
     print join("", expand(@m));
     exit 1;
