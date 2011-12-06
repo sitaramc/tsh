@@ -32,7 +32,7 @@ use 5.10.0;
     use strict;
     use warnings;
 
-    use Text::Tabs;
+    use Text::Tabs;         # only used for formatting the usage() message
     use Text::ParseWords;
 
 # ----------------------------------------------------------------------
@@ -113,8 +113,8 @@ sub try {
     # and process them
     rc_lines(@lines);
 
-    # this should not happen but...
-    $err_count++ if ($rc and not $err_count);
+    # bump err_count if the last command had a non-0 rc (that was apparently not checked).
+    $err_count++ if $rc;
 
     # finish up...
     dbg(1, "$err_count error(s)") if $err_count;
@@ -149,7 +149,8 @@ sub put {
 sub cd {
     my $dir = shift || '';
     _cd($dir);
-    return $rc;
+    dbg(1, "cd $dir: $!") if $rc;
+    return (not $rc);
 }
 
 # this is classic AUTOLOAD, almost from the perlsub manpage.  Although, if
@@ -164,7 +165,7 @@ sub AUTOLOAD {
 
     die "tsh's autoload support expects only one arg\n" if @_ > 1;
     _sh("$program $_[0]");
-    return $rc;
+    return (not $rc);       # perl truth
 }
 
 # ----------------------------------------------------------------------
@@ -229,12 +230,16 @@ sub rc_lines {
                 dbg(1, "rc: $rc from cmd prior to '$cmd'\n");
                 # count this as a failure, for exit status purposes
                 $err_count++;
+                # and reset the rc, otherwise for example 'ls foo; tt; tt; tt'
+                # will tell you there are 3 errors!
+                $rc = 0;
                 push @errors_in, $testname if $testname;
             }
 
             # prepare to run the command
             dbg(3, "C: $cmd");
             if ($cmd =~ /^sh (.*)/) {
+                # XXX not really useful now; may get rid of it later (not documented)
                 _sh($1);
             } elsif (def($cmd)) {
                 # expand macro and replace head of @cmds (unshift)
@@ -246,8 +251,8 @@ sub rc_lines {
             # reset rc if checking is done
             $rc = 0 if ($cmd ~~ [qr(^ok(\s|$)), qr(^!ok(\s|$)), qr(^!/), qr(^/)]);
                 # assumes you will (a) never have *both* 'ok' and '!ok' after
-                # an action command, and (b) it will come immediately after
-                # the action command, (i.e., no /patt/ etc., in between)
+                # an action command, and (b) one of them will come immediately
+                # after the action command, with /patt/ only after it.
         }
     }
 }
@@ -356,6 +361,7 @@ sub parse {
     }
 }
 
+# currently unused
 sub executable {
     my $cmd = shift;
     # path supplied
