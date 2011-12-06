@@ -102,14 +102,37 @@ run it at `TSH_VERBOSE=2` or higher.
 
 ## functions available to perl
 
-For **perl**, you can get more information by calling one of these exported
-functions:
+For **perl**, you already saw the `try()` function above.  A lot can be done
+by just passing **tsh commands** (see later) to it, but there are some more
+functions available if you need them.
+
+The following functions get you more information:
 
   * `rc()` -- return code of the last external command executed
   * `text()` -- combined STDOUT+STDERR of the last external command
   * `error_count()` -- number of errors in the last sequence of tsh commands
-  * `error_list()` -- if available, the list of "testnames" (see above) at
-    which errors occurred.
+  * `error_list()` -- the list of "testnames" (see above) at which errors
+    occurred
+
+The following convenience functions are also available.  Their purpose is to
+help you replace shell scripts as much as possible.
+
+  * `put($filename, $var)` -- print the contents of the perl variable in arg-2
+    to the file in arg-1.  The filename can start with a pipe character, which
+    means it will then be interpreted as a process to pipe data to (but you
+    *cannot* capture it's stdout or stderr).
+
+    Examples
+
+        put("$HOME/.foo.rc", $foo);
+        # eqvt to: echo "$foo" > ~/.foo.rc
+
+        put("| cat >> $HOME/.foo.rc", $foo);
+        # eqvt to: echo "$foo" >> ~/.foo.rc
+
+  * there is no `get()` function.  You can use backticks to get the same
+    effect, although they cause an extra fork or two so it may not be as
+    efficient as doing it in pure perl.  Patches welcome.
 
 ## output
 
@@ -137,7 +160,7 @@ Also in both cases, the TSH_VERBOSE env var changes the output:
 
 (Setting it to 4 produces too much output to be useful most of the time).
 
-## commands in detail
+## tsh commands in detail
 
 ### macros
 

@@ -18,9 +18,7 @@ use 5.10.0;
     use Exporter 'import';
     @EXPORT = qw(
         try run AUTOLOAD
-
-        rc error_count text error_list
-
+        rc error_count text error_list put
         cd
 
         $HOME $PWD $USER
@@ -126,6 +124,23 @@ sub try {
 sub run {
     try(@_);
     return $text;
+}
+
+sub put {
+    my($file, $data) = @_;
+    my $mode = ">";
+    $mode = "|-" if $file =~ s/^\s*\|\s*//;
+
+    $rc = 0;
+    my $fh;
+    open($fh, $mode, $file) and
+    print $fh $data and
+    close $fh and
+    return 1;
+
+    $rc = 1;
+    dbg(1, "put $file: $!");
+    return '';
 }
 
 # ----------------------------------------------------------------------
