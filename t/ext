@@ -1,0 +1,31 @@
+#!/usr/bin/perl -s
+use 5.10.0;
+use strict;
+use warnings;
+
+# dummy external program to be called by the 'tsh' test suite.  Responds to
+# various input arguments in various ways
+
+select STDERR; $|++;
+select STDOUT; $|++;
+
+while (@ARGV) {
+    my $_ = shift;
+    my $arg = $ARGV[0] || '';
+
+    given($_) {
+        when('out') { select STDOUT; }
+        when('err') { select STDERR; }
+        when(/^\d+$/) { seq($_); }
+        when('exit') { exit ($arg || 0); }
+        default { say $_; }
+    }
+}
+
+sub seq {
+    my ($end) = shift;
+
+    for (1..$end) {
+        say $_;
+    }
+}

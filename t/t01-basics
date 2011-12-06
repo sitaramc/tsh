@@ -1,0 +1,253 @@
+#!/usr/bin/perl -s
+use 5.10.0;
+use strict;
+use warnings;
+
+# too bad we can't test it with itself but that would break some cosmic law
+# somewhere, not to mention make the results unreliable :-)
+
+# modules...
+    use lib '..';
+    use Tsh;
+
+    use lib '.';
+    use driver;
+    # note: this is NOT in a different package so we need some "our()"s
+    our($rc, $t1, $t2, $grv, $testnum);
+        # grv == generic return value;
+
+END { say "1..$testnum"; }
+
+# the run() command
+    $grv = run("ls ext text");
+    Eq($grv, "ls: cannot access text: No such file or directory\next\n");
+    $grv = run("ls ext text >/dev/null");
+    Eq($grv, "ls: cannot access text: No such file or directory\n");
+    $grv = run("ls ext text 2>/dev/null");
+    Eq($grv, "ext\n");
+
+# the put() command
+    $grv = put("/etc/shadow", "abracadabra");
+    Eq($grv, '');
+    $grv = put("tt-put1", "empty");
+    Eq($grv, "1");
+    Eq(slurp("tt-put1"), "empty");
+    $grv = put("tt-put1", "abracadabra");
+    Eq($grv, "1");
+    Eq(slurp("tt-put1"), "abracadabra");
+
+    $grv = put("| cat > /etc/shadow", "abracadabra");
+    Eq($grv, '');
+    $grv = put("| cat >> tt-put1", "a la kazaam");
+    Eq($grv, "1");
+    Eq(slurp("tt-put1"), "abracadabraa la kazaam");
+    $grv = put("| wc -c > tt-put1", "words only");
+    Eq($grv, "1");
+    Eq(slurp("tt-put1"), "10\n");
+
+# the different types of inputs should all produce the same output (i.e.,
+# multiline, multi-arg, and various combinations).  We choose this
+#       ls; ls foo; !ok; ls bar; ls baz; ok or no baz; clone /tmp/2b /tmp/not2b
+# as a representative sample of commands, and test the output at all verbosity
+# levels, starting with the undefined one
+    my $tv = 0;
+    while ($tv <= 5) {
+        my @grv;
+        my ($a, $b, $c, $a2, $b2, $c2);
+
+        ($a, $b, $c) = test("ls; ls foo; !ok; ls bar; ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
+        $c =~ s/^# L:.*\n//gm;
+
+        ($a2, $b2, $c2) = test("ls", " ls foo\n !ok; ls bar", " ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
+        Eq($a, $a2);
+        Eq($b, $b2);
+        $c2 =~ s/^# L:.*\n//gm;
+        Eq($c, $c2);
+        die "\n\nc=$c,,,\n\nc2=$c2,,,\n\n" unless $c eq $c2;
+
+        ($a2, $b2, $c2) = test("ls", " ls foo\n # comment line\n !ok; ls bar", " ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
+        Eq($a, $a2);
+        Eq($b, $b2);
+        $c2 =~ s/^# L:.*\n//gm;
+        Eq($c, $c2);
+
+        ($a2, $b2, $c2) = test("ls", " ls foo\n !ok", " ls bar; ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
+        Eq($a, $a2);
+        Eq($b, $b2);
+        $c2 =~ s/^# L:.*\n//gm;
+        Eq($c, $c2);
+
+        ($a2, $b2, $c2) = test(" ls     ", "    ls     foo\n !ok; ls bar", " ls baz; ok         or        no baz; clone /tmp/2b /tmp/not2b");
+        Eq($a, $a2);
+        Eq($b, $b2);
+        $c2 =~ s/^# L:.*\n//gm;
+        $c2 =~ s/ +/ /g;
+        $c  =~ s/ +/ /g;
+        Eq($c, $c2);
+        Eq($c, $c2) or die;
+
+        tv($tv);
+        dbg("next round tv=$tv");
+        $tv++;
+    }
+    clean();
+
+# test the cd function
+    my $pwd = $ENV{PWD};
+    Eq(`pwd`, "$ENV{PWD}\n");
+    cd("/tmp"); Eq(`pwd`, "/tmp\n");
+    cd(); Eq(`pwd`, "$HOME\n");
+    cd($pwd); Eq(`pwd`, "$pwd\n");
+
+# test autoloaded functions; we'll use uname just for kicks
+    my $uname = `uname -a`;
+    uname("-a");
+    Eq(text(), $uname);
+
+# the 'getter' functions: rc, text, error_count
+    clean();
+    _try("ls");
+    true(rc == 0);
+    true(error_count() == 0);
+
+    clean();
+    _try("ls ext");
+    true(rc == 0);
+    true(error_count() == 0);
+
+    clean();
+    _try("ls ext; ok");
+    true(rc == 0);
+    true(error_count() == 0);
+
+    clean();
+    _try("ls ext; !ok");
+    true(rc == 0);
+    true(error_count() == 1);
+
+    clean();
+    _try("ls abcdefgh");
+    true(rc == 2);
+    true(error_count() == 1);
+
+    clean();
+    _try("ls abcdefgh; ok");
+    true(rc == 0);
+    true(error_count() == 1);
+
+    clean();
+    _try("ls abcdefgh; !ok");
+    true(rc == 0);
+    true(error_count() == 0);
+
+    clean();
+    _try("ls");
+    true(text() =~ /driver\.pm.*ext.*t01-basics/s);
+    _try("ls abcdefgh; ok");
+    Eq(text(), "ls: cannot access abcdefgh: No such file or directory\n");
+
+    clean();
+    _try("## bad 1", "ls non-ex;  ok", "## good 1", "ls ext;  ok",
+         "## bad 2", "ls non-ex; !ok", "## good 2", "ls ext; !ok");
+    Eq( scalar(error_list()), "bad 1\ngood 2");
+    my @a = error_list();
+    true( @a ~~ ["bad 1", "good 2"] );
+
+# macros (TBD: macros with parameters)
+    clean();
+    _try("DEF boo = echo ghost-speak", "ls boo");
+    true(text() =~ /cannot access/);
+    false(text() =~ /speak/);
+    clean();
+    _try("boo");
+    false(text() =~ /cannot access/);
+    true(text() =~ /speak/);
+
+# ----------------------------------------------------------------------
+# specific functionality...
+
+# external command fails but rc is not checked: error_count should go up and
+# error_list should contain the test name.  The rc should still be 0, however.
+    clean();
+    true(rc() == 0);
+    true(error_count() == 0);
+    Eq(scalar(error_list()), '');
+
+    _try("## test: rc not checked",
+        "false; ls ext");
+
+    true(rc() == 0);
+    true(error_count() == 1);
+    Eq(scalar(error_list()), "test: rc not checked");
+
+    # on the other hand, the same sequence with a successful command...
+    clean();
+    true(rc() == 0);
+    true(error_count() == 0);
+    Eq(scalar(error_list()), '');
+
+    _try("## test: rc not checked",
+        "true; ls ext");
+
+    true(rc() == 0);
+    true(error_count() == 0);
+    Eq(scalar(error_list()), "");
+
+# /patt/, !/patt/ (ok/!ok have kinda been tested above, but not "or" messages)
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    my ($a, $b, $c) = test("ls abcdefgh; ok or patt failed");
+    true($a == 1);
+    Eq($b, '');
+    Eq($c, "# patt failed\n");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls abcdefgh; !ok or !patt failed");
+    true($a == 0);
+    Eq($b, '');
+    Eq($c, '');
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; ok or patt failed");
+    true($a == 0);
+    Eq($b, '');
+    Eq($c, '');
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; !ok or !patt failed");
+    true($a == 1);
+    Eq($b, '');
+    Eq($c, "# !patt failed\n");
+
+    # ----
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls abcdefgh; /cannot access/ or patt failed");
+    true($a == 0);
+    Eq($b, '');
+    Eq($c, '');
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls abcdefgh; !/cannot access/ or !patt failed");
+    true($a == 1);
+    Eq($b, '');
+    Eq($c, "# !patt failed\n");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; /cannot access/ or patt failed");
+    true($a == 1);
+    Eq($b, '');
+    Eq($c, "# patt failed\n");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; !/cannot access/ or !patt failed");
+    true($a == 0);
+    Eq($b, '');
+    Eq($c, '');
