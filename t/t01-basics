@@ -257,3 +257,9 @@ END { say "1..$testnum"; }
     $uname = `uname -a|tr a-z A-Z`;
     try('uname -a; perl $_ = uc');
     Eq(text(), $uname);
+
+# put tsh command
+    clean();
+    put("tt-getput", "abc\ndef\nghi");
+    try('cat tt-getput; perl $_ = uc; put tt-getput');
+    Eq(slurp("tt-getput"), "ABC\nDEF\nGHI");

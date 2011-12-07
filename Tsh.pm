@@ -128,6 +128,7 @@ sub run {
 
 sub put {
     my($file, $data) = @_;
+    die "probable quoting error in arguments to put: $file\n" if $file =~ /^\s*['"]/;
     my $mode = ">";
     $mode = "|-" if $file =~ s/^\s*\|\s*//;
 
@@ -160,7 +161,9 @@ sub cd {
 # one other difference is that, unlike all the other entry points, this one
 # returns $text (the user can still pick up $rc using the rc() function).
 sub AUTOLOAD {
-    my $program = $Tsh::AUTOLOAD; $program =~ s/.*:://;
+    my $program = $Tsh::AUTOLOAD;
+    dbg(4, "program = $program, arg=$_[0]");
+    $program =~ s/.*:://;
     $autoloaded{$program}++;
 
     die "tsh's autoload support expects only one arg\n" if @_ > 1;
@@ -359,10 +362,13 @@ sub parse {
         # just that -- defaults.  But this one is hardwired!
         dummy_commit($1);
 
-    } elsif ( $cmd eq 'print' ) {
+    } elsif ( $cmd =~ '^put(?:\s+(\S.*))?$' ) {
 
-        # don't document this yet...
-        say $text if defined $text;
+        if ($1) {
+            put($1, $text);
+        } else {
+            print $text if defined $text;
+        }
 
     } elsif ( $cmd =~ m(^ok(?:\s+or\s+(.*))?$) ) {
 
