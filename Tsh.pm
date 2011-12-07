@@ -238,10 +238,7 @@ sub rc_lines {
 
             # prepare to run the command
             dbg(3, "C: $cmd");
-            if ($cmd =~ /^sh (.*)/) {
-                # XXX not really useful now; may get rid of it later (not documented)
-                _sh($1);
-            } elsif (def($cmd)) {
+            if (def($cmd)) {
                 # expand macro and replace head of @cmds (unshift)
                 dbg(2, "DEF: $cmd");
                 unshift @cmds, cmds(def($cmd));
@@ -308,10 +305,39 @@ sub _sh {
     }
 }
 
+sub _perl {
+    my $perl = shift;
+    local $_;
+    $_ = $text;
+
+    dbg(4, "  eval: $perl");
+    my $evrc = eval $perl;
+
+    if ($@) {
+        $rc = 1;    # shell truth
+        dbg(1, $@);
+        # leave $text unchanged
+    } else {
+        $rc = not $evrc;
+            # $rc is always shell truth, so we need to cover the case where
+            # there was no error but it still returned a perl false
+        $text = $_;
+    }
+    dbg(4, "  eval-rc=$evrc, results:\n$text");
+}
+
 sub parse {
     my $cmd = shift;
 
-    if ( $cmd eq 'tt' ) {
+    if ($cmd =~ /^sh (.*)/) {
+
+        _sh($1);
+
+    } elsif ($cmd =~ /^perl (.*)/) {
+
+        _perl($1);
+
+    } elsif ( $cmd eq 'tt' ) {
 
         test_tick();
 

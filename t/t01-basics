@@ -251,3 +251,9 @@ END { say "1..$testnum"; }
     true($a == 0);
     Eq($b, '');
     Eq($c, '');
+
+# perl <perl expression>
+    clean();
+    $uname = `uname -a|tr a-z A-Z`;
+    try('uname -a; perl $_ = uc');
+    Eq(text(), $uname);

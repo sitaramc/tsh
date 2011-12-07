@@ -195,6 +195,26 @@ In addition, each of these can be followed by the word 'or' followed by a
 
     ok or hey the last command failed
 
+### perl commands
+
+You can run arbitrary perl commands; e.g.:
+
+    tsh 'uname; perl $_ = lc; !/macos/ or we dont do Macs, mac!'
+
+Avoid the temptation to put in all sorts of stuff there.  It's meant for quick
+little things that would be horribly cumbersome in shell.
+
+Perl's `eval` function is used.  Before starting, `$_` is set to the output of
+the last external command.  The perl command should leave its own output in
+the same variable, which will then in turn become the "output" of this
+command.
+
+The *return value*, on the other hand, reflects the success or failure of the
+command being eval'd.
+
+For this reason, note that `perl $_ = lc;` and `perl lc;` are *quite*
+different.
+
 ### git specific commands
 
   * `tt` -- step the commit timestamps by one minute
