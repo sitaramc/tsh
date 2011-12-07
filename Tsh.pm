@@ -452,7 +452,7 @@ sub cmds {
     chomp; $_ = trim_ws($_);
 
     # a "line" has more than one "command"; split them out and trim WS at ends
-    my @cmds = grep { defined } parse_line(';', 1, $_);
+    my @cmds = grep { defined } parse_line(';', 0, $_);
     @cmds = grep { $_ = trim_ws($_); /\S/; } @cmds;
     return @cmds;
 }
