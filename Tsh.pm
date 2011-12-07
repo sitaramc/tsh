@@ -362,7 +362,7 @@ sub parse {
     } elsif ( $cmd eq 'print' ) {
 
         # don't document this yet...
-        say $text if $text;
+        say $text if defined $text;
 
     } elsif ( $cmd =~ m(^ok(?:\s+or\s+(.*))?$) ) {
 
