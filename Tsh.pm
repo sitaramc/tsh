@@ -414,19 +414,21 @@ sub fail {
     $testnum++;
     say "not ok ($testnum)" if $ENV{HARNESS_ACTIVE};
 
-    if ($_[1]) {
+    my $die = 0;
+    my ($msg1, $msg2) = @_;
+    if ($msg2) {
         # if arg2 is non-empty, print it regardless of debug level
-        say STDERR "# $_[1]";
+        $die = 1 if $msg2 =~ s/^die //;
+        say STDERR "# $msg2";
     }
 
-    dbg(1, "FAIL: $_[0]", $testname || '');
+    dbg(1, "FAIL: $msg1", $testname || '');
 
     # count the error and add the testname to the list if it is set
     $err_count++;
     push @errors_in, $testname if $testname;
 
-    # TODO not documented yet...
-    return unless $ENV{DIE};
+    return unless $die;
     dbg(1, "exiting at cmd $cmd\n");
 
     exit ( $rc || 74 );

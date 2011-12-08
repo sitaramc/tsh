@@ -263,3 +263,62 @@ END { say "1..$testnum"; }
     put("tt-getput", "abc\ndef\nghi");
     try('cat tt-getput; perl $_ = uc; put tt-getput');
     Eq(slurp("tt-getput"), "ABC\nDEF\nGHI");
+
+# or die
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls abcdefgh; ok or patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls abcdefgh; ok or die patt failed; echo -n after-test; put");
+    Ne($b, "after-test");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls abcdefgh; !ok or !patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls abcdefgh; !ok or die !patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; ok or patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls ext; ok or die patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; !ok or !patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls ext; !ok or die !patt failed; echo -n after-test; put");
+    Ne($b, "after-test");
+
+    # ----
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls abcdefgh; /cannot access/ or patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls abcdefgh; /cannot access/ or die patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls abcdefgh; !/cannot access/ or !patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls abcdefgh; !/cannot access/ or die !patt failed; echo -n after-test; put");
+    Ne($b, "after-test");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; /cannot access/ or patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls ext; /cannot access/ or die patt failed; echo -n after-test; put");
+    Ne($b, "after-test");
+
+    clean();
+    $ENV{TSH_VERBOSE}=0;
+    ($a, $b, $c) = test("ls ext; !/cannot access/ or !patt failed; echo -n after-test; put");
+    Eq($b, "after-test");
+    ($a, $b, $c) = test("ls ext; !/cannot access/ or die !patt failed; echo -n after-test; put");
+    Eq($b, "after-test");

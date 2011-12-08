@@ -63,6 +63,11 @@ sub Eq {
     dbg("Eq fail",   $_[0],   $_[1]);
 }
 
+sub Ne {
+    return 1 if true($_[0] ne $_[1]);
+    dbg("Eq fail",   $_[0],   $_[1]);
+}
+
 sub true {
     $testnum++;
     if ($_[0]) {
