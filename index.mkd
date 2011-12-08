@@ -1,0 +1,31 @@
+# tsh -- quick and easy testing shell
+
+## why
+
+I got tired of: bash/sh portability issues; writing long, complicated, test
+code; weird shell constructs for simple things; constantly putting in
+`&>/dev/null`; and many more.
+
+Sure you can write test scripts in any language, but for the kind of code I
+write, I have to run lots of shell commands, capture the output, and check
+that.
+
+The [examples][ex] may help tell the story better.  A longer example, which
+also shows you how to do TAP stuff, is [here][gpt01].
+
+[gpt01]: https://github.com/sitaramc/gitpod/blob/master/t/t01
+
+## aim
+
+Less typing, less output.
+
+## requirements
+
+perl 5.10.0 or later, and any posix shell that understands very simple
+redirection.
+
+## documentation
+
+The rest of the documentation is [here][tsh].
+
+[ex]: http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html

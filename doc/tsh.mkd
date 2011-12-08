@@ -1,0 +1,263 @@
+# #tsh tsh -- quick and easy testing shell
+
+## why
+
+I got tired of: bash/sh portability issues; writing long, complicated, test
+code; weird shell constructs for simple things; constantly putting in
+`&>/dev/null`; and many more.
+
+Sure you can write test scripts in any language, but for the kind of code I
+write, I have to run lots of shell commands, capture the output, and check
+that.
+
+The [examples][ex] may help tell the story better.  A longer example, which
+also shows you how to do TAP stuff, is [here][gpt01].
+
+[gpt01]: https://github.com/sitaramc/gitpod/blob/master/t/t01
+
+## aim
+
+Less typing, less output.
+
+## requirements
+
+perl 5.10.0 or later, and any posix shell that understands very simple
+redirection.
+
+----
+
+## input
+
+I assume you have read the [examples][ex] already.
+
+For **shell**, there's little more to be said.  You can supply a single
+filename instead of giving the commands on the command line like we did.  You
+can also supply the commands on STDIN
+
+When you supply more than one argument, each argument is treated as being on a
+separate line.  Commands are separated by newlines as well as by semicolons.
+
+### syntax
+
+You can put one command on each line, or more than one per line if you
+separate them with semicolons.  Comments are allowed in the usual way.
+Leading whitespace is always thrown away, but not elsewhere.  There are no
+continuation lines or include files.
+
+(When you supply commands directly as arguments, each argument is treated as a
+line.  In addition, an argument may itself be multi-line, as the teaser
+examples showed.  All these combinations are treated as multi-line input).
+
+### hashhash comments (testnames)
+
+Comment lines that start with optional whitespace, then `##` (two hash marks)
+then whitespace, are treated as supplying the "name" of that test; see
+the `error_list` function below.  This also serves as a progress report if you
+run it at `TSH_VERBOSE=2` or higher.
+
+## functions available to perl
+
+For **perl**, you call a function called `try()`.  A lot can be done by just
+passing **tsh commands** (see later) to it, but there are some more functions
+available if you need them.
+
+The following functions get you more information:
+
+  * `rc()` -- return code of the last external command executed
+  * `text()` -- combined STDOUT+STDERR of the last external command
+  * `error_count()` -- number of errors in the last sequence of tsh commands
+  * `error_list()` -- the list of "testnames" (see above) at which errors
+    occurred
+
+The following convenience functions are also available.  Their purpose is to
+help you replace shell scripts as much as possible.
+
+  * `put($filename, $var)` -- print the contents of the perl variable in arg-2
+    to the file in arg-1.  The filename can start with a pipe character, which
+    means it will then be interpreted as a process to pipe data to (but you
+    *cannot* capture it's stdout or stderr).
+
+    Examples
+
+        put("$HOME/.foo.rc", $foo);
+        # eqvt to: echo "$foo" > ~/.foo.rc
+
+        put("| cat >> $HOME/.foo.rc", $foo);
+        # eqvt to: echo "$foo" >> ~/.foo.rc
+
+    (There is no `get()` function.  You can use backticks to get the same
+    effect, although they cause an extra fork or two so it may not be as
+    efficient as doing it in pure perl.  Patches welcome.)
+
+## output
+
+The **return value** fits the language used so you can use it as a boolean as
+usual.  <font color="gray">This means the **actual** value is different in
+perl and in shell, since they have opposite notions of what is "true" and what
+is "false".</font>
+
+STDOUT is only used for TAP related output (see TAP section later).
+
+The 'try()' function prints nothing by default.  The 'tsh' command prints
+nothing on success, but on failure it prints a very brief error summary (like
+"3 error(s)") to STDERR.
+
+In both cases, test-specific messages (see later) are printed to STDERR.
+
+Also in both cases, the TSH_VERBOSE env var changes the output:
+
+  * **0**: (for 'tsh') suppress even the error summary (only exit code).
+  * **1**: print test failure messages and unchecked non-zero return codes
+    (i.e., when an external command fails but its exit code is ignored).
+  * **2**: print each line as it is read.  Also, print the text of the special
+    "hashhash" comments (see "hashhash comments" section earlier).
+  * **3**: print each command as it is read.
+
+(Setting it to 4 produces too much output to be useful most of the time).
+
+## tsh commands in detail
+
+### macros
+
+Every command is first checked if a macro by that name exists.  Your current
+list of macros is shown if you run 'tsh' without any arguments.  With the
+default set of macros, for example, a command of `empty` will run `git commit
+--allow-empty -m empty`.
+
+The rest of the commands described below are checked only after this macro
+expansion.  Macro expansion is attempted even on the result of the previous
+macro expansion, so be careful you don't recurse.
+
+### environment commands
+
+  * `cd ...` -- does a chdir().  Without an argument it goes to `$HOME`
+  * `ENV foo='bar baz'` -- sets the env var foo
+
+### testing commands
+
+(Also see the TAP section below for the `plan` command).
+
+  * `ok` -- checks that the previous command's rc was 0
+  * `!ok` -- similar, except negated (check that the rc was *not* 0)
+  * `/pattern/` -- check that the combined STDOUT+STDERR of the last executed
+    command contained a string that matched the pattern
+  * `!/pattern/` -- negated version of above
+
+A note about the patterns: if you need to use `^` or `$`, please see the "perl
+code" section later.
+
+#### test-specific messages
+
+In addition, each of these can be followed by the word 'or' followed by a
+**test-specific message**, like so:
+
+    ok or hey the last command failed
+
+which results in the specific message being printed to STDERR, as described in
+the "output" section above.
+
+A variation of the test-specific message is:
+
+    ok or die hey the last command failed so I am dying...
+
+i.e., if the first word of the message is "die" then that test will cause an
+immediate exit.  (If you're calling `tsh` from a shell script, your shell
+script will of course still run -- it is upto you to detect the death of 'tsh'
+using the exit status and do whatever you need to).
+
+### perl code
+
+**NOTE**: Avoid the temptation to put in all sorts of stuff there.  It's meant
+to help do quick little tasks that would be horribly cumbersome in shell.  If
+you find yourself doing more, you've misunderstood the purpose of tsh.
+
+You can run arbitrary perl code; e.g.:
+
+    tsh 'uname; perl $_ = lc; !/macos/ or we dont do Macs, mac!'
+
+Perl's `eval` function is used.  Before starting, `$_` is set to the output of
+the last external command.  The perl code should leave its own output in
+the same variable, which will then in turn become the "output" of this
+command.
+
+The *return value*, on the other hand, reflects the success or failure of the
+command being eval'd.
+
+For this reason, note that `perl $_ = lc;` and `perl lc;` are *quite*
+different.
+
+Here's another example.  Say you wanted to check that *some* line in the input
+starts with "foo":
+
+    # this WON'T work
+    tsh 'cat file; /^foo/ or die bad file'
+
+The code above won't work because the input is all in one variable, so you
+need a `/m` flag to make `^` and `$` work.  However, the simple code for
+normal testing does not accept flags.
+
+So if you really need that, try this:
+
+    # this will work
+    tsh 'cat file; perl /^foo/m; ok or die bad file'
+
+This replaces the /pattern/ test with a 'perl /pattern/m' test, and then the
+'ok' is used to test the success or failure of the perl code.
+
+### git specific commands
+
+  * `tt` -- step the commit timestamps by one minute
+  * `dc foo` -- do a dummy_commit of the file 'foo', appending a fixed known
+    line to it
+
+### miscellaneous commands
+
+  * the `put` command prints the current "text" (i.e., the output of the last
+    command) to STDOUT if no arguments are given, or to the filename if an
+    argument is passed.  Like the `put()` function above, (1) the filename can
+    start with a `|` character, and (2) you cannot capture this process's
+    STDOUT or STDERR, though you can redirect them the normal shell-way.
+
+    **WARNING**: this command may have some interpolation, quoting, and
+    escaping needs.
+
+    Examples:
+
+        tsh 'cat example.gitolite.rc
+            perl s/^\\s*($|#.*$)\\n//gm
+            put ~/.gitolite.rc'
+
+    This takes the sample rc file, removes all blank and comment lines, and
+    puts the result in `~/.gitolite.rc`.
+
+    **NOTE 1**: the `\` characters have to be doubled up; see warning above.
+    If things don't work experiment with `TSH_VERBOSE=3` and look at the
+    actual perl command being run -- perhaps a `$` or a quote character needs
+    to be escaped.
+
+    **NOTE 2**: don't forget the *whole* file is in one string, so you need
+    the `/m` modifier to the regex substitution.
+
+### external commands
+
+Any command that is not one of the above will be treated as an external
+command.
+
+## TAP compliance
+
+'tsh' is will produce `ok` / `not ok` lines if you run it from 'prove', or
+indeed any harness that sets the `HARNESS_ACTIVE` env var.
+
+You will need to supply a plan before the first test.  Just use the `plan N`
+tsh command (where N is the number of tests you plan to run).
+
+You may have guessed that the `plan` command is merely a convenience; if you
+wish, you can check that variable and print the plan yourself.
+
+Note: the ok/not ok messages do not contain the actual, correct, test number,
+because tsh can be invoked multiple times from an outer shell script, and we
+have no clean way to convey the running test number from one invocation to the
+next.  This does *not* affect TAP compliance; at least it works fine with
+`prove`.
+
+[ex]: http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html
