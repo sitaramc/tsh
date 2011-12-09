@@ -228,8 +228,16 @@ sub rc_lines {
             # this needs to be the 'global' one, since fail() prints it
             $cmd = shift @cmds;
 
+            # is the current command a "testing" command?
+            my $testing_cmd = (
+                   $cmd =~ m(^ok(?:\s+or\s+(.*))?$)
+                or $cmd =~ m(^!ok(?:\s+or\s+(.*))?$)
+                or $cmd =~ m(^/(.*?)/(?:\s+or\s+(.*))?$)
+                or $cmd =~ m(^!/(.*?)/(?:\s+or\s+(.*))?$)
+            );
+
             # warn if the previous command failed but rc is not being checked
-            if ($rc and not ($cmd ~~ [qr(^ok(\s|$)), qr(^!ok(\s|$)), qr(^!/), qr(^/)])) {
+            if ($rc and not $testing_cmd) {
                 dbg(1, "rc: $rc from cmd prior to '$cmd'\n");
                 # count this as a failure, for exit status purposes
                 $err_count++;
@@ -249,7 +257,7 @@ sub rc_lines {
                 parse($cmd);
             }
             # reset rc if checking is done
-            $rc = 0 if ($cmd ~~ [qr(^ok(\s|$)), qr(^!ok(\s|$)), qr(^!/), qr(^/)]);
+            $rc = 0 if $testing_cmd;
                 # assumes you will (a) never have *both* 'ok' and '!ok' after
                 # an action command, and (b) one of them will come immediately
                 # after the action command, with /patt/ only after it.
