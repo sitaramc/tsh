@@ -485,8 +485,8 @@ sub cmds {
     my $_ = shift;
     chomp; $_ = trim_ws($_);
 
-    # a "line" has more than one "command"; split them out and trim WS at ends
-    my @cmds = grep { defined } parse_line(';', 0, $_);
+    # split on unescaped ';'s, then unescape the ';' in the results
+    my @cmds = map { s/\\;/;/g; $_ } split /(?<!\\);/;
     @cmds = grep { $_ = trim_ws($_); /\S/; } @cmds;
     return @cmds;
 }

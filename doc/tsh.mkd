@@ -30,23 +30,25 @@ redirection.
 
 I assume you have read the [examples][ex] already.
 
-For **shell**, there's little more to be said.  You can supply a single
-filename instead of giving the commands on the command line like we did.  You
-can also supply the commands on STDIN
-
-When you supply more than one argument, each argument is treated as being on a
-separate line.  Commands are separated by newlines as well as by semicolons.
-
 ### syntax
 
-You can put one command on each line, or more than one per line if you
-separate them with semicolons.  Comments are allowed in the usual way.
-Leading whitespace is always thrown away, but not elsewhere.  There are no
-continuation lines or include files.
+Input is one or more lines.
 
-(When you supply commands directly as arguments, each argument is treated as a
-line.  In addition, an argument may itself be multi-line, as the teaser
-examples showed.  All these combinations are treated as multi-line input).
+  * no arguments: STDIN is the input
+  * exactly one argument which is a readable filename: its contents are the input
+  * otherwise: the arguments themselves are the input
+      * if an argument is multi-line, it is split at newlines
+      * this is what you saw in the [examples][ex] section
+
+Comments are allowed but not in the middle of a line (i.e., the whole line
+needs to be a comment).  Leading whitespace is always thrown away, but not
+elsewhere.  There are no continuation lines or include files.
+
+Each line is one or more commands, separated by unescaped semicolons.
+
+The only way to escape a semicolon is to precede it with a backslash.  Any
+quotes are taken literally so don't try to use those to escape semicolons.
+`TSH_VERBOSE=3` (or higher) will show the commands actually being run.
 
 ### hashhash comments (testnames)
 
