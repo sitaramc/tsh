@@ -1,0 +1,146 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/imli/mini-projects/gitpod/t/t01.html</title>
+<meta name="Generator" content="Vim/7.3">
+<meta name="plugin-version" content="vim7.3_v6">
+<meta name="syntax" content="none">
+<meta name="settings" content="use_css">
+<style type="text/css">
+<!--
+pre { font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+.Special { color: #6a5acd; }
+.Comment { color: #0000ff; }
+.Identifier { color: #008b8b; }
+.Constant { color: #ff00ff; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.PreProc { color: #a020f0; }
+-->
+</style>
+</head>
+<body>
+<pre>
+<span class="PreProc">#!/usr/bin/perl</span>
+<span class="Statement">use </span><span class="Constant">5.10.0</span>;
+<span class="Statement">use strict</span>;
+<span class="Statement">use warnings</span>;
+
+<span class="Statement">use lib</span> <span class="Constant">&quot;</span><span class="Identifier">$ENV</span><span class="Identifier">{</span><span class="Constant">HOME</span><span class="Identifier">}</span><span class="Constant">/bin</span><span class="Constant">&quot;</span>;
+<span class="Statement">use </span>Tsh;
+
+<span class="Comment"># plan -- change this when #tests changes</span>
+    run <span class="Constant">'</span><span class="Constant">plan 39</span><span class="Constant">'</span>;
+
+<span class="Comment"># settings/defines</span>
+    <span class="Statement">my</span> <span class="Identifier">$rr</span>=<span class="Constant">&quot;</span><span class="Identifier">$HOME</span><span class="Constant">/gitpod-remote-repos</span><span class="Constant">&quot;</span>;
+
+<span class="Comment"># check tsh and gitpod are in $PATH</span>
+    <span class="Special">try &quot;</span>
+        which tsh;      ok or tsh    not in PATH
+        which gitpod;   ok or gitpod not in PATH
+    <span class="Special">&quot;</span> <span class="Statement">or</span> <span class="Statement">die</span>;
+
+<span class="Comment"># check login shell is also the same</span>
+    run(<span class="Constant">'</span><span class="Constant">which gitpod</span><span class="Constant">'</span>) <span class="Statement">eq</span> run(<span class="Constant">'</span><span class="Constant">grep ^$USER: /etc/passwd | cut -f7 -d:</span><span class="Constant">'</span>)
+        <span class="Statement">or</span> <span class="Statement">die</span> <span class="Constant">&quot;</span><span class="Constant">login shell is not the right one</span><span class="Constant">&quot;</span>;
+
+<span class="Comment"># clean slate</span>
+    cd; rm(<span class="Constant">&quot;</span><span class="Constant">-rf </span><span class="Identifier">$rr</span><span class="Constant"> non-bare r[1234].git sub[1234] u .gitpod.rc</span><span class="Constant">&quot;</span>);
+
+<span class="Comment"># check ssh setup</span>
+    <span class="Special">try &quot;</span>
+        ssh -o preferredauthentications=publickey $USER\@localhost info
+        <span class="Special">/hello, this is gitpod/</span> or ssh setup is not complete
+    <span class="Special">&quot;</span> <span class="Statement">or</span> <span class="Statement">die</span>;
+
+<span class="Comment"># prepare to create the &quot;remote&quot; repositories</span>
+    <span class="Special">try &quot;</span>mkdir -p $rr/r{1,2,3,4}<span class="Special">&quot;</span>
+        <span class="Statement">or</span> <span class="Statement">die</span> <span class="Constant">&quot;</span><span class="Constant">mkdir </span><span class="Identifier">$rr</span><span class="Constant">/... failed</span><span class="Special">\n</span><span class="Constant">&quot;</span>;
+
+    <span class="Statement">unless</span> (try(<span class="Constant">&quot;</span><span class="Constant">git config --get user.name</span><span class="Constant">&quot;</span>)) {
+        <span class="Statement">say</span> <span class="Constant">'</span><span class="Constant">...creating git configs...</span><span class="Constant">'</span>;
+        <span class="Special">run &quot;</span><span class="Identifier">git config --global user.name 'git cephalopod'</span>
+            <span class="Identifier">git config --global user.email 'git-cephalopod\@example.com'</span><span class="Special">&quot;</span>;
+    }
+
+<span class="Comment"># make 4 &quot;remote&quot; repositories</span>
+    <span class="Statement">for</span> <span class="Statement">my</span> <span class="Identifier">$r</span> (<span class="Constant">qw(</span><span class="Constant">r1 r2 r3 r4</span><span class="Constant">)</span>) {
+        <span class="Special">try &quot;</span>
+        <span class="Comment"># create bare repo and clone it</span>
+            <span class="Statement">cd $rr/$r</span>; <span class="Identifier">git init --bare</span>
+            <span class="Statement">cd</span>; rm -rf non-bare; <span class="Identifier">git clone $rr/$r non-bare</span>
+        <span class="Comment"># make commits, a branch, etc., and push</span>
+            <span class="Statement">cd non-bare</span>; <span class="Statement">dc $r</span>; <span class="Statement">dc m1</span>; <span class="Statement">dc m2</span>; <span class="Statement">branch AA</span>; <span class="Statement">dc m3</span>; <span class="Statement">dc m4</span>; <span class="Statement">checkout AA</span>; <span class="Statement">dc a1</span>; <span class="Statement">dc a2</span>
+            <span class="Statement">push --all origin</span>
+        <span class="Comment"># check branches got pushed ok</span>
+            <span class="Special">/new.branch.*AA.*AA/</span> or <span class="Statement">push branch AA failed</span>
+            <span class="Special">/new.branch.*master.*master/</span> or <span class="Statement">push branch master failed</span>
+        <span class="Special">&quot;</span> <span class="Statement">or</span> <span class="Statement">die</span>;
+    }
+
+<span class="Comment"># just for kicks, 2 of the repos will be in subdirectories</span>
+    try <span class="Constant">'</span><span class="Constant"> cd; mkdir sub2 sub4 </span><span class="Constant">'</span> <span class="Statement">or</span> <span class="Statement">die</span> <span class="Constant">'</span><span class="Constant">mkdir sub2 sub4 failed</span><span class="Constant">'</span>;
+
+<span class="Comment"># clones:</span>
+    <span class="Special">try &quot;</span>
+        <span class="Comment">## 'clone' the first 2 repos using local commands</span>
+        gitpod <span class="Statement">clone file:///$rr/r1 r1</span>
+        gitpod <span class="Statement">clone file:///$rr/r2 sub2/r2</span>
+
+        <span class="Comment">## now setup the other 2 using ssh</span>
+        ssh $USER\@localhost <span class="Statement">clone file:///$rr/r3 r3</span>
+        ssh $USER\@localhost <span class="Statement">clone file:///$rr/r4 sub4/r4</span>
+    <span class="Special">&quot;</span> <span class="Statement">or</span> <span class="Statement">die</span> error_list();
+
+    <span class="Special">try &quot;</span>
+    <span class="Comment">## check the repos</span>
+        <span class="Identifier">git ls-remote r1.git</span>;       <span class="Special">/3ba846a/</span>; <span class="Special">/fc7a819/</span>
+        <span class="Identifier">git ls-remote sub2/r2.git</span>;  <span class="Special">/c4c7d55/</span>; <span class="Special">/50d9881/</span>
+
+        <span class="Identifier">git ls-remote r3.git</span>;       <span class="Special">/b499b19/</span>; <span class="Special">/e4cc88d/</span>
+        <span class="Identifier">git ls-remote sub4/r4.git</span>;  <span class="Special">/af0f123/</span>; <span class="Special">/cd3734f/</span>
+
+        ssh $USER\@localhost info
+        <span class="Special">/r1/</span>;   <span class="Special">/r3/</span>;   <span class="Special">/sub2/r2/</span>;  <span class="Special">/sub4/r4/</span>
+
+    <span class="Comment">## empty fetch</span>
+        ssh $USER\@localhost <span class="Statement">fetch r1</span>; <span class="Special">/fetching from/</span>; !<span class="Special">/From file/</span>
+
+    <span class="Comment">## macro</span>
+    <span class="Comment"># define a macro for a frequently used sequence of steps</span>
+        <span class="PreProc">DEF delete-AA = cd $HOME/r1.git; branch -D AA; /Deleted branch AA/; git gc --prune=now; cd $HOME</span>
+
+    <span class="Comment">## non-empty fetch</span>
+        delete-AA; ssh $USER\@localhost <span class="Statement">fetch r1</span>; <span class="Special">/fetching from/</span>; <span class="Special">/From file/</span>
+
+    <span class="Comment">## userclone</span>
+        mkdir u
+        <span class="Identifier">git clone $USER\@localhost:r1 u/r1</span>; <span class="Statement">cd u/r1</span>; <span class="Identifier">git ls-remote origin</span>; ok; <span class="Special">/3ba846a/</span>; <span class="Special">/fc7a819/</span>
+
+    <span class="Comment">## automatic fetch</span>
+    <span class="Comment"># it should fetch one automatically here</span>
+        delete-AA; <span class="Statement">cd $HOME/u/r1</span>; <span class="Identifier">git fetch</span>; <span class="Special">/new.branch.*AA.*AA/</span>
+
+    <span class="Comment"># and here it shouldn't</span>
+        <span class="Identifier">git fetch</span>; !<span class="Special">/new.branch.*AA.*AA/</span>
+
+    <span class="Comment">## lazy mode</span>
+    <span class="Identifier">ENV TSH_VERBOSE=0</span>
+        echo LAZY = all &gt; $HOME/.gitpod.rc
+
+    <span class="Comment"># automatic fetch should fail due to lazy mode</span>
+        delete-AA; <span class="Statement">cd $HOME/u/r1</span>; <span class="Identifier">git fetch</span>; !<span class="Special">/new.branch.*AA.*AA/</span>
+
+    <span class="Comment">## manual fetch</span>
+    <span class="Comment"># via ssh</span>
+        ssh $USER\@localhost <span class="Statement">fetch r1</span>; <span class="Special">/new.branch.*AA.*AA/</span>
+
+    <span class="Comment"># from local shell</span>
+        delete-AA; gitpod <span class="Statement">fetch r1</span>; <span class="Special">/new.branch.*AA.*AA/</span>
+
+    <span class="Special">&quot;</span> <span class="Statement">or</span> <span class="Statement">die</span> <span class="Statement">scalar</span>(error_list());
+</pre>
+</body>
+</html>

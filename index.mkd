@@ -10,14 +10,17 @@ Sure you can write test scripts in any language, but for the kind of code I
 write, I have to run lots of shell commands, capture the output, and check
 that.
 
-The [examples][ex] may help tell the story better.  A longer example, which
-also shows you how to do TAP stuff, is [here][gpt01].
-
-[gpt01]: https://github.com/sitaramc/gitpod/blob/master/t/t01
-
 ## aim
 
 Less typing, less output.
+
+Simple examples
+[here](http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html).
+
+The test program for 'gitpod' is TAP compliant and can be found
+[here](https://github.com/sitaramc/gitpod/blob/master/t/t01).  A syntax
+colored version is
+[here](http://sitaramc.github.com/tsh/doc/gitpod-test.html).
 
 ## requirements
 
