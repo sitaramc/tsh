@@ -1,0 +1,106 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/imli/mini-projects/tsh/doc/tsh-examples.sh.html</title>
+<meta name="Generator" content="Vim/7.3">
+<meta name="plugin-version" content="vim7.3_v6">
+<meta name="syntax" content="none">
+<meta name="settings" content="use_css">
+<style type="text/css">
+<!--
+pre { font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+.PreProc { color: #a020f0; }
+.Identifier { color: #008b8b; }
+.Special { color: #6a5acd; }
+.Constant { color: #ff00ff; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Comment { color: #0000ff; }
+-->
+</style>
+</head>
+<body>
+<pre>
+<span class="Comment">#!/bin/sh</span>
+
+<span class="Comment"># This is just some code snippets collected in one file, not an actual shell</span>
+<span class="Comment"># script you can run, so:</span>
+<span class="Statement">exit</span> <span class="Constant">1</span>
+
+<span class="Comment"># NOTE: some examples assume a &quot;die&quot; function is already defined, like:</span>
+<span class="Comment">#     die() { echo &quot;$@&quot; &gt;&amp;2; exit 1; }</span>
+
+<span class="Comment"># ----------------------------------------------------------------------</span>
+
+<span class="Comment"># here's a simple tsh snippet that can go into some longer shell script</span>
+
+    <span class="Special">tsh &quot;</span>rpm -qa
+        ok           or not an RPM system?
+        <span class="Special">/git-daemon/</span> or need git-daemon
+        <span class="Special">/git-gui/</span>    or need git-gui
+    <span class="Special">&quot;</span> || <span class="Statement">exit</span> <span class="Constant">1</span>
+
+<span class="Comment"># ----------------------------------------------------------------------</span>
+
+<span class="Comment"># so the basic idea is:</span>
+
+<span class="Comment">#   - run any external command</span>
+<span class="Comment">#   - save its exit status and output for later</span>
+<span class="Comment">#   - allow multiple tests on them, with suitable &quot;fail&quot; messages</span>
+<span class="Comment">#   - return exit codes appropriately to the caller</span>
+
+<span class="Comment"># ----------------------------------------------------------------------</span>
+
+<span class="Comment"># readability/writability</span>
+
+<span class="Comment"># shell is pretty noisy (even more so than perl)!  Since tsh is *not* a</span>
+<span class="Comment"># general purpose language, it makes much less noise.</span>
+
+<span class="Comment"># original code</span>
+
+    <span class="Identifier">pubkey_file</span>=<span class="PreProc">$1</span>
+
+    <span class="Statement">if </span><span class="Statement">[</span> <span class="Statement">-n</span> <span class="Statement">&quot;</span><span class="PreProc">$pubkey_file</span><span class="Statement">&quot;</span> <span class="Statement">]</span>
+    <span class="Statement">then</span>
+        <span class="Statement">echo</span><span class="Constant"> </span><span class="PreProc">$pubkey_file</span><span class="Constant"> </span><span class="Statement">|</span> grep <span class="Statement">'</span><span class="Constant">.pub$</span><span class="Statement">'</span> <span class="Statement">&gt;</span>/dev/null <span class="Statement">||</span> die <span class="Statement">&quot;</span><span class="PreProc">$pubkey_file</span><span class="Constant"> must end in .pub</span><span class="Statement">&quot;</span>
+        <span class="Statement">echo</span><span class="Constant"> </span><span class="PreProc">$pubkey_file</span><span class="Constant"> </span><span class="Statement">|</span> grep <span class="Statement">'</span><span class="Constant">@</span><span class="Statement">'</span> <span class="Statement">&gt;</span>/dev/null <span class="Statement">&amp;&amp;</span> die <span class="Statement">&quot;</span><span class="PreProc">$pubkey_file</span><span class="Constant"> must not contain '@'</span><span class="Statement">&quot;</span>
+        <span class="Statement">[</span> <span class="Statement">-f</span> <span class="PreProc">$pubkey_file</span> <span class="Statement">]</span> <span class="Statement">||</span> die <span class="Statement">&quot;</span><span class="Constant">cant find </span><span class="PreProc">$pubkey_file</span><span class="Statement">&quot;</span>
+    <span class="Statement">else</span>
+        <span class="Statement">echo</span><span class="Constant"> pubkey_file name needed</span>
+    <span class="Statement">fi</span>
+
+<span class="Comment"># code using tsh</span>
+
+    <span class="Special">tsh &quot;</span>
+        echo $1
+            <span class="Special">/./</span>      or die pubkey_file name needed
+            <span class="Special">/\.pub$/</span> or die $1 must end in .pub
+            !<span class="Special">/\@/</span>    or die $1 must not contain '@'
+        test -f $1
+            ok       or die cant find $1
+    <span class="Special">&quot;</span> || die
+
+
+<span class="Comment"># ----------------------------------------------------------------------</span>
+
+<span class="Comment"># complexity</span>
+
+<span class="Comment"># how do you say &quot;exit if gcc 4 is missing or gcc 3 is installed&quot;?</span>
+
+    <span class="Special">tsh &quot;</span>rpm -qa
+        <span class="Special">/gcc-4/</span>     or please install gcc 4
+        !<span class="Special">/gcc-3/</span>    or please remove  gcc 3
+    <span class="Special">&quot;</span> || <span class="Statement">exit</span> <span class="Constant">1</span>
+
+<span class="Comment"># the only way I know of to do this in shell, without using at least a</span>
+<span class="Comment"># temp file, is this:</span>
+
+    cat ~/rpm-qa |
+        tee <span class="Statement">&gt;</span><span class="PreProc">(</span><span class="Special">grep gcc</span><span class="Constant">-3</span><span class="Special"> </span><span class="Statement">&gt;</span><span class="Special">/dev/null </span><span class="Statement">&amp;&amp;</span><span class="Special"> </span><span class="Statement">echo</span><span class="Constant"> please remove gcc 3 </span><span class="Statement">&gt;&amp;2</span><span class="PreProc">)</span> |
+        grep gcc<span class="Constant">-4</span> <span class="Statement">&gt;</span>/dev/null || <span class="Statement">echo</span><span class="Constant"> please install gcc 4</span>
+
+<span class="Comment"># Yuck!</span>
+</pre>
+</body>
+</html>

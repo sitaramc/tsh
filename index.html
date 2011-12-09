@@ -1,0 +1,60 @@
+<head>
+<style>
+    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; margin-left: -10px; }
+    h4          { background: #ffb; }
+    code        { font-size:    1.1em;  background:  #ddf; }
+    pre         { margin-left:  2em;    background:  #ddf; }
+    pre code    { font-size:    1.1em;  background:  #ddf; }
+</style>
+
+</head>
+
+<p style="text-align:center">
+    <a href="master-toc.html">master TOC</a>
+|
+    <a href="master-toc.html#index">chapter TOC</a>
+|
+    <a href="support.html">support</a>
+</p>
+
+
+<p><a name="index_tsh_quick_and_easy_testing_shell_"></a></p>
+
+<h1>tsh -- quick and easy testing shell</h1>
+
+<p><a name="index_why_"></a></p>
+
+<h2>why</h2>
+
+<p>I got tired of: bash/sh portability issues; writing long, complicated, test
+code; weird shell constructs for simple things; constantly putting in
+<code>&amp;&gt;/dev/null</code>; and many more.</p>
+
+<p>Sure you can write test scripts in any language, but for the kind of code I
+write, I have to run lots of shell commands, capture the output, and check
+that.</p>
+
+<p>The <a href="http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html">examples</a> may help tell the story better.  A longer example, which
+also shows you how to do TAP stuff, is <a href="https://github.com/sitaramc/gitpod/blob/master/t/t01">here</a>.</p>
+
+<p><a name="index_aim_"></a></p>
+
+<h2>aim</h2>
+
+<p>Less typing, less output.</p>
+
+<p><a name="index_requirements_"></a></p>
+
+<h2>requirements</h2>
+
+<p>perl 5.10.0 or later, and any posix shell that understands very simple
+redirection.</p>
+
+<p><a name="index_documentation_"></a></p>
+
+<h2>documentation</h2>
+
+<p>The rest of the documentation is <a href="doc/tsh.html#tsh" title="tsh -- quick and easy testing shell">here</a>.</p>
