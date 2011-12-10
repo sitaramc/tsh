@@ -157,9 +157,6 @@ sub cd {
 # this is classic AUTOLOAD, almost from the perlsub manpage.  Although, if
 # instead of `ls('bin');` you want to be able to say `ls 'bin';` you will need
 # to predeclare ls, with `sub ls;`.
-
-# one other difference is that, unlike all the other entry points, this one
-# returns $text (the user can still pick up $rc using the rc() function).
 sub AUTOLOAD {
     my $program = $Tsh::AUTOLOAD;
     dbg(4, "program = $program, arg=$_[0]");
