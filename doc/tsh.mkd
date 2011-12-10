@@ -68,6 +68,7 @@ The following functions get you more information:
 
   * `rc()` -- return code of the last external command executed
   * `text()` -- combined STDOUT+STDERR of the last external command
+  * `lines()` -- same as text() but as a chomped list
   * `error_count()` -- number of errors in the last sequence of tsh commands
   * `error_list()` -- the list of "testnames" (see above) at which errors
     occurred

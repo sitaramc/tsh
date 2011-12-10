@@ -18,7 +18,7 @@ use 5.10.0;
     use Exporter 'import';
     @EXPORT = qw(
         try run AUTOLOAD
-        rc error_count text error_list put
+        rc error_count text lines error_list put
         cd
 
         $HOME $PWD $USER
@@ -180,6 +180,10 @@ sub rc {
 
 sub text {
     return $text || '';
+}
+
+sub lines {
+    return split /\n/, $text;
 }
 
 sub error_count {

@@ -322,3 +322,9 @@ END { say "1..$testnum"; }
     Eq($b, "after-test");
     ($a, $b, $c) = test("ls ext; !/cannot access/ or die !patt failed; echo -n after-test; put");
     Eq($b, "after-test");
+
+# lines()
+    $grv = run("ls driver.pm ext t01-basics");
+    my @lines = lines();
+    true(@lines == 3);
+    true(@lines ~~ [qw(driver.pm ext t01-basics)]);
