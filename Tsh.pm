@@ -104,7 +104,7 @@ sub tsh {
 # (later) handles single commands
 
 sub try {
-    $err_count = 0;
+    $rc = $err_count = 0;
     @errors_in = ();
 
     # break up multiline arguments into separate lines

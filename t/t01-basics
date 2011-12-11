@@ -169,6 +169,7 @@ END { say "1..$testnum"; }
 # external command fails but rc is not checked: error_count should go up and
 # error_list should contain the test name.  The rc should still be 0, however.
     clean();
+    try("echo hi");
     true(rc() == 0);
     true(error_count() == 0);
     Eq(scalar(error_list()), '');
@@ -182,6 +183,7 @@ END { say "1..$testnum"; }
 
     # on the other hand, the same sequence with a successful command...
     clean();
+    try("echo hi");
     true(rc() == 0);
     true(error_count() == 0);
     Eq(scalar(error_list()), '');

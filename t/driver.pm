@@ -113,7 +113,6 @@ sub clean {
     system("rm -f tt-*");
     delete $ENV{TSH_VERBOSE};
     delete $ENV{HARNESS_ACTIVE};
-    try("echo hi"); # has the effect of resetting $rc and such
 }
 
 sub dbg {
