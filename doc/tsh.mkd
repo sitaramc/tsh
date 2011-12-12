@@ -215,8 +215,10 @@ This replaces the /pattern/ test with a 'perl /pattern/m' test, and then the
 ### git specific commands
 
   * `tt` -- step the commit timestamps by one minute
-  * `dc foo` -- do a dummy_commit of the file 'foo', appending a fixed known
-    line to it
+  * `dc foo bar [...]` -- do a dummy_commit of the file 'foo', then 'bar',
+    etc., appending a fixed known line to each.  You can insert 'tt' among
+    these arguments, (e.g., `dc foo tt bar tt baz`), to step the timer tick if
+    you need that.
 
 ### miscellaneous commands
 

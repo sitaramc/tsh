@@ -384,11 +384,11 @@ sub parse {
 
         $ENV{$1} = $2;
 
-    } elsif ( $cmd =~ /^dc\s+(\S+)$/ ) {
+    } elsif ( $cmd =~ /^dc\s+(\S.*)$/ ) {
 
         # this is the only "git special" really; the default expansions are
         # just that -- defaults.  But this one is hardwired!
-        dummy_commit($1);
+        dummy_commits($1);
 
     } elsif ( $cmd =~ '^put(?:\s+(\S.*))?$' ) {
 
@@ -554,10 +554,15 @@ Meanwhile, here are your local 'macro' definitions:
 # ----------------------------------------------------------------------
 # git-specific internal service subs
 
-sub dummy_commit {
-    my $f = shift;
-    my $ts = localtime($tick);
-    _sh("echo $f at $ts >> $f && git add $f && git commit -m '$f at $ts'")
+sub dummy_commits {
+    for my $f (split ' ', shift) {
+        if ($f eq 'tt') {
+            test_tick();
+            next;
+        }
+        my $ts = localtime($tick);
+        _sh("echo $f at $ts >> $f && git add $f && git commit -m '$f at $ts'")
+    }
 }
 
 sub test_tick {
