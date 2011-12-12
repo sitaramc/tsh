@@ -72,6 +72,8 @@ The following functions get you more information:
   * `error_count()` -- number of errors in the last sequence of tsh commands
   * `error_list()` -- the list of "testnames" (see above) at which errors
     occurred
+  * `tsh_tempdir()` -- the name of the tempdir that tsh automatically creates
+    when needed
 
 The following convenience functions are also available.  Their purpose is to
 help you replace shell scripts as much as possible.
@@ -134,7 +136,9 @@ macro expansion, so be careful you don't recurse.
 
 ### environment commands
 
-  * `cd ...` -- does a chdir().  Without an argument it goes to `$HOME`
+  * `cd ...` -- does a chdir().  Without an argument it goes to `$HOME`.  If
+    the argument is `tsh_tmpdir`, it is replaced by the name of the tempdir
+    that tsh automatically creates when needed
   * `ENV foo='bar baz'` -- sets the env var foo
 
 ### testing commands

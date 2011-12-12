@@ -330,3 +330,28 @@ END { say "1..$testnum"; }
     my @lines = lines();
     true(@lines == 3);
     true(@lines ~~ [qw(driver.pm ext t01-basics)]);
+
+# tsh_tempdir
+    my @td = ();
+    try("ls -d /tmp/tsh_tempdir.*") and @td = lines;
+    ($a, $b, $c) = test("cd tsh_tempdir; ls -d /tmp/tsh_tempdir.*; cd tsh_tempdir; pwd; put");
+    chomp($b);
+    # now make sure $b did not exist before (i.e., was not a member of @td)
+    false($b ~~ \@td);
+    # and does not exist now
+    try("ls -d $b; /ls: cannot access $b/");
+    true(rc == 0);
+    true(error_count() == 0);
+
+    # now try the same from inside *this* perl program
+    @td = ();
+    try("ls -d /tmp/tsh_tempdir.*") and @td = lines;
+    try("cd tsh_tempdir; pwd");
+    $b = (lines)[0];
+    cd;
+    # now make sure $b did not exist before (i.e., was not a member of @td)
+    false($b ~~ \@td);
+    # and *does* exist now
+    try("ls -d $b; !/ls: cannot access $b/");
+    true(rc == 0);
+    true(error_count() == 0);

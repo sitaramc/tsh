@@ -19,7 +19,7 @@ use 5.10.0;
     @EXPORT = qw(
         try run AUTOLOAD
         rc error_count text lines error_list put
-        cd
+        cd tsh_tempdir
 
         $HOME $PWD $USER
     );
@@ -34,6 +34,14 @@ use 5.10.0;
 
     use Text::Tabs;         # only used for formatting the usage() message
     use Text::ParseWords;
+
+    use File::Temp qw(tempdir);
+    END { chdir($ENV{HOME}); }
+    # we need this END handler *after* the 'use File::Temp' above.  Without
+    # this, if $PWD at exit was $tempdir, you get errors like "cannot remove
+    # path when cwd is [...] at /usr/share/perl5/File/Temp.pm line 902".
+
+    use Data::Dumper;
 
 # ----------------------------------------------------------------------
 # globals
@@ -51,6 +59,7 @@ use 5.10.0;
     my $tick;       # timestamp for git commits
 
     my %autoloaded;
+    my $tempdir = '';
 
 # ----------------------------------------------------------------------
 # setup
@@ -194,6 +203,14 @@ sub error_list {
     );
 }
 
+sub tsh_tempdir {
+    # create tempdir if not already done
+    $tempdir = tempdir("tsh_tempdir.XXXXXXXXXX", TMPDIR => 1, CLEANUP => 1) unless $tempdir;
+        # XXX TODO that 'UNLINK' doesn't work for Ctrl_C
+
+    return $tempdir;
+}
+
 # ----------------------------------------------------------------------
 # internal (non-exportable) service subs
 
@@ -296,6 +313,8 @@ sub def {
 
 sub _cd {
     my $dir = shift || $HOME;
+    # a directory name of 'tsh_tempdir' is special
+    $dir = tsh_tempdir() if $dir eq 'tsh_tempdir';
     $rc = 0;
     chdir($dir) or $rc = 1;
 }
@@ -511,7 +530,6 @@ sub dbg {
 }
 
 sub ddump {
-    use Data::Dumper;
     for my $i (@_) {
         print STDERR "DBG: " .  Dumper($i);
     }
