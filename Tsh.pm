@@ -504,7 +504,7 @@ sub is_comment_or_empty {
     chomp; $_ = trim_ws($_);
     if (/^##\s(.*)/) {
         $testname = $1;
-        dbg(2, $1);
+        say "# $1";
     }
     return (/^#/ or /^$/);
 }

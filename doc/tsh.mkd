@@ -54,9 +54,9 @@ quotes are taken literally so don't try to use those to escape semicolons.
 ### hashhash comments (testnames)
 
 Comment lines that start with optional whitespace, then `##` (two hash marks)
-then whitespace, are treated as supplying the "name" of that test; see
-the `error_list` function below.  This also serves as a progress report if you
-run it at `TSH_VERBOSE=2` or higher.
+then whitespace, are treated as supplying the "name" of that test; see the
+`error_list` function below.  This also serves as a progress report, getting
+printed (prefixed by a "# ") to STDOUT as the test runs.
 
 ## functions available to perl
 
@@ -115,8 +115,7 @@ Also in both cases, the TSH_VERBOSE env var changes the output:
   * **0**: (for 'tsh') suppress even the error summary (only exit code).
   * **1**: print test failure messages and unchecked non-zero return codes
     (i.e., when an external command fails but its exit code is ignored).
-  * **2**: print each line as it is read.  Also, print the text of the special
-    "hashhash" comments (see "hashhash comments" section earlier).
+  * **2**: print each line as it is read.
   * **3**: print each command as it is read.
 
 (Setting it to 4 produces too much output to be useful most of the time).
@@ -269,5 +268,10 @@ because tsh can be invoked multiple times from an outer shell script, and we
 have no clean way to convey the running test number from one invocation to the
 next.  This does *not* affect TAP compliance; at least it works fine with
 `prove`.
+
+"hashhash comments" (see above) are printed to STDOUT, prefixed by a "# ".
+This is useful, for example, when running under 'prove -v', to serve as a more
+user-friendly progress indicator than a series of 'ok' or 'not ok' messages,
+while not affecting "prove" (without "-v").
 
 [ex]: http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html
