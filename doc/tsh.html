@@ -96,9 +96,8 @@ quotes are taken literally so don't try to use those to escape semicolons.
 
 <p>Comment lines that start with optional whitespace, then <code>##</code> (two hash marks)
 then whitespace, are treated as supplying the "name" of that test; see the
-<code>error_list</code> function below.  This also serves as a progress report if you run
-it at <code>TSH_VERBOSE=2</code> or higher (or if running under a TAP harness; see TAP
-section later).</p>
+<code>error_list</code> function below.  This also serves as a progress report, getting
+printed (prefixed by a "# ") to STDOUT as the test runs.</p>
 
 <p><a name="doc_tsh_functions_available_to_perl_"></a></p>
 
@@ -167,8 +166,7 @@ nothing on success, but on failure it prints a very brief error summary (like
 <li><strong>0</strong>: (for 'tsh') suppress even the error summary (only exit code).</li>
 <li><strong>1</strong>: print test failure messages and unchecked non-zero return codes
 (i.e., when an external command fails but its exit code is ignored).</li>
-<li><strong>2</strong>: print each line as it is read.  Also, print the text of the special
-"hashhash" comments (see "hashhash comments" section earlier).</li>
+<li><strong>2</strong>: print each line as it is read.</li>
 <li><strong>3</strong>: print each command as it is read.</li>
 </ul>
 
@@ -359,4 +357,5 @@ next.  This does <em>not</em> affect TAP compliance; at least it works fine with
 
 <p>"hashhash comments" (see above) are printed to STDOUT, prefixed by a "# ".
 This is useful, for example, when running under 'prove -v', to serve as a more
-user-friendly progress indicator than a series of 'ok' or 'not ok' messages.</p>
+user-friendly progress indicator than a series of 'ok' or 'not ok' messages,
+while not affecting "prove" (without "-v").</p>
