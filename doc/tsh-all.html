@@ -96,9 +96,10 @@ quotes are taken literally so don't try to use those to escape semicolons.
 <h3>hashhash comments (testnames)</h3>
 
 <p>Comment lines that start with optional whitespace, then <code>##</code> (two hash marks)
-then whitespace, are treated as supplying the "name" of that test; see
-the <code>error_list</code> function below.  This also serves as a progress report if you
-run it at <code>TSH_VERBOSE=2</code> or higher.</p>
+then whitespace, are treated as supplying the "name" of that test; see the
+<code>error_list</code> function below.  This also serves as a progress report if you run
+it at <code>TSH_VERBOSE=2</code> or higher (or if running under a TAP harness; see TAP
+section later).</p>
 
 <p><a name="doc_tsh_functions_available_to_perl_"></a></p>
 
@@ -113,9 +114,12 @@ available if you need them.</p>
 <ul>
 <li><code>rc()</code> -- return code of the last external command executed</li>
 <li><code>text()</code> -- combined STDOUT+STDERR of the last external command</li>
+<li><code>lines()</code> -- same as text() but as a chomped list</li>
 <li><code>error_count()</code> -- number of errors in the last sequence of tsh commands</li>
 <li><code>error_list()</code> -- the list of "testnames" (see above) at which errors
 occurred</li>
+<li><code>tsh_tempdir()</code> -- the name of the tempdir that tsh automatically creates
+when needed</li>
 </ul>
 
 <p>The following convenience functions are also available.  Their purpose is to
@@ -193,7 +197,9 @@ macro expansion, so be careful you don't recurse.</p>
 <h3>environment commands</h3>
 
 <ul>
-<li><code>cd ...</code> -- does a chdir().  Without an argument it goes to <code>$HOME</code></li>
+<li><code>cd ...</code> -- does a chdir().  Without an argument it goes to <code>$HOME</code>.  If
+the argument is <code>tsh_tmpdir</code>, it is replaced by the name of the tempdir
+that tsh automatically creates when needed</li>
 <li><code>ENV foo='bar baz'</code> -- sets the env var foo</li>
 </ul>
 
@@ -287,8 +293,10 @@ tsh 'cat file; perl /^foo/m; ok or die bad file'
 
 <ul>
 <li><code>tt</code> -- step the commit timestamps by one minute</li>
-<li><code>dc foo</code> -- do a dummy_commit of the file 'foo', appending a fixed known
-line to it</li>
+<li><code>dc foo bar [...]</code> -- do a dummy_commit of the file 'foo', then 'bar',
+etc., appending a fixed known line to each.  You can insert 'tt' among
+these arguments, (e.g., <code>dc foo tt bar tt baz</code>), to step the timer tick if
+you need that.</li>
 </ul>
 
 <p><a name="doc_tsh_miscellaneous_commands_"></a></p>
@@ -349,3 +357,7 @@ because tsh can be invoked multiple times from an outer shell script, and we
 have no clean way to convey the running test number from one invocation to the
 next.  This does <em>not</em> affect TAP compliance; at least it works fine with
 <code>prove</code>.</p>
+
+<p>"hashhash comments" (see above) are printed to STDOUT, prefixed by a "# ".
+This is useful, for example, when running under 'prove -v', to serve as a more
+user-friendly progress indicator than a series of 'ok' or 'not ok' messages.</p>
