@@ -53,6 +53,8 @@ use 5.10.0;
 
     my $testnum;    # current test number, for info in TAP output
     my $testname;   # current test name, for error info to user
+    my $line;       # current line number
+
     my $err_count;  # count of test failures
     my @errors_in;  # list of testnames that errored
 
@@ -231,6 +233,7 @@ sub rc_lines {
         next if is_comment_or_empty($_);
 
         dbg(2, "L: $_");
+        $line = $_;     # save line for printing with 'FAIL:'
 
         # a DEF has to be on a line by itself
         if ( /^DEF\s+([-.\w]+)\s*=\s*(\S.*)$/ ) {
@@ -450,7 +453,7 @@ sub fail {
         say STDERR "# $msg2";
     }
 
-    dbg(1, "FAIL: $msg1", $testname || '');
+    dbg(1, "FAIL: $msg1", $testname || '', "test number $testnum", "L: $line");
 
     # count the error and add the testname to the list if it is set
     $err_count++;
