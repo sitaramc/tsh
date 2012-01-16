@@ -72,7 +72,7 @@ body { font-family: monospace; color: #000000; background-color: #ffffff; }
             <span class="Statement">cd $rr/$r</span>; <span class="Identifier">git init --bare</span>
             <span class="Statement">cd</span>; rm -rf non-bare; <span class="Identifier">git clone $rr/$r non-bare</span>
         <span class="Comment"># make commits, a branch, etc., and push</span>
-            <span class="Statement">cd non-bare</span>; <span class="Statement">dc $r</span>; <span class="Statement">dc m1</span>; <span class="Statement">dc m2</span>; <span class="Statement">branch AA</span>; <span class="Statement">dc m3</span>; <span class="Statement">dc m4</span>; <span class="Statement">checkout AA</span>; <span class="Statement">dc a1</span>; <span class="Statement">dc a2</span>
+            <span class="Statement">cd non-bare</span>; <span class="Statement">tc $r</span>; <span class="Statement">tc m1</span>; <span class="Statement">tc m2</span>; <span class="Statement">branch AA</span>; <span class="Statement">tc m3</span>; <span class="Statement">tc m4</span>; <span class="Statement">checkout AA</span>; <span class="Statement">tc a1</span>; <span class="Statement">tc a2</span>
             <span class="Statement">push --all origin</span>
         <span class="Comment"># check branches got pushed ok</span>
             <span class="Special">/new.branch.*AA.*AA/</span> or <span class="Statement">push branch AA failed</span>

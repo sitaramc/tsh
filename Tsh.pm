@@ -368,7 +368,7 @@ sub parse {
 
         _perl($1);
 
-    } elsif ( $cmd eq 'tt' ) {
+    } elsif ( $cmd eq 'tt' or $cmd eq 'test-tick') {
 
         test_tick();
 
@@ -384,7 +384,7 @@ sub parse {
 
         $ENV{$1} = $2;
 
-    } elsif ( $cmd =~ /^dc\s+(\S.*)$/ ) {
+    } elsif ( $cmd =~ /^(?:tc|test-commit)\s+(\S.*)$/ ) {
 
         # this is the only "git special" really; the default expansions are
         # just that -- defaults.  But this one is hardwired!
@@ -556,7 +556,7 @@ Meanwhile, here are your local 'macro' definitions:
 
 sub dummy_commits {
     for my $f (split ' ', shift) {
-        if ($f eq 'tt') {
+        if ($f eq 'tt' or $f eq 'test-tick') {
             test_tick();
             next;
         }
