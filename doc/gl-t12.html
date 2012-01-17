@@ -1,0 +1,120 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>~/imli/repos/gitolite/t/t12-merge-check.html</title>
+<meta name="Generator" content="Vim/7.3">
+<meta name="plugin-version" content="vim7.3_v6">
+<meta name="syntax" content="none">
+<meta name="settings" content="use_css">
+<style type="text/css">
+<!--
+pre { font-family: monospace; color: #000000; background-color: #ffffff; }
+body { font-family: monospace; color: #000000; background-color: #ffffff; }
+.Identifier { color: #008b8b; }
+.Special { color: #6a5acd; }
+.PreProc { color: #a020f0; }
+.Constant { color: #ff00ff; }
+.Statement { color: #a52a2a; font-weight: bold; }
+.Comment { color: #0000ff; }
+-->
+</style>
+</head>
+<body>
+<pre>
+<span class="Comment"># vim: ft=sh:</span>
+tsh <span class="Statement">pwd</span> || die <span class="Statement">'</span><span class="Constant">## tsh not installed?</span><span class="Statement">'</span>
+
+<span class="Statement">for </span>wr <span class="Statement">in</span> <span class="Constant">0</span> <span class="Constant">1</span>
+<span class="Statement">do</span>
+    <span class="Statement">for </span>bc <span class="Statement">in</span> <span class="Constant">0</span> <span class="Constant">1</span>
+    <span class="Statement">do</span>
+        <span class="Statement">cd</span> <span class="PreProc">$TESTDIR</span>
+        <span class="PreProc">$TESTDIR</span>/rollback <span class="Statement">||</span> die <span class="Statement">&quot;</span><span class="Constant">rollback failed</span><span class="Statement">&quot;</span>
+        editrc GL_WILDREPOS <span class="PreProc">$wr</span>
+        editrc GL_BIG_CONFIG <span class="PreProc">$bc</span>
+
+        <span class="Comment"># ----------</span>
+
+        name <span class="Statement">&quot;</span><span class="Constant">INTERNAL</span><span class="Statement">&quot;</span>
+        <span class="Statement">echo</span><span class="Constant"> </span><span class="Statement">&quot;</span>
+<span class="Constant">            repo  foo</span>
+<span class="Constant">                  RW+M      =   u1</span>
+<span class="Constant">                  RW+       =   u2</span>
+<span class="Constant">                  RWM      .=   u3</span>
+<span class="Constant">                  RW        =   u4</span>
+<span class="Constant">        </span><span class="Statement">&quot;</span><span class="Constant"> </span><span class="Statement">|</span> ugc
+
+        <span class="Statement">cd</span> ~/td
+
+        name <span class="Statement">&quot;</span><span class="Constant">setup a merged push</span><span class="Statement">&quot;</span>
+
+        <span class="Special">tsh &quot;</span>
+            ls -al foo;         !ok;    <span class="Special">/cannot access foo: No such file or directory/</span>
+            <span class="Statement">clone u1:foo</span>;       ok;     <span class="Special">/Cloning into/</span>
+                                        <span class="Special">/You appear to have cloned an empty/</span>
+        <span class="Special">&quot;</span>
+
+        <span class="Statement">cd</span> foo
+
+        <span class="Special">tsh &quot;</span>
+            ls -Al;             ok;     <span class="Special">/\.git/</span>
+            <span class="Statement">test-commit aa</span>;     ok;     <span class="Special">/1 files changed, 1 insertions/</span>
+            <span class="Statement">tag start</span>;          ok
+            <span class="Statement">push-om</span>;            ok;     <span class="Special">/new branch.*master.-..master/</span>
+                                        <span class="Special">/create.delete ignored.*merge-check/</span>
+            <span class="Statement">checkout -b new</span>;    ok;     <span class="Special">/Switched to a new branch 'new'/</span>
+            <span class="Statement">test-commit bb cc</span>;  ok
+            <span class="Statement">checkout master</span>;    ok;     <span class="Special">/Switched to branch 'master'/</span>
+            <span class="Statement">test-commit dd ee</span>;  ok
+            <span class="Identifier">git merge new</span>;      ok;     <span class="Special">/Merge made.*recursive/</span>
+            <span class="Statement">test-commit ff</span>;     ok
+            <span class="Statement">tag end</span>;            ok
+        <span class="Special">&quot;</span>
+
+        name <span class="Statement">&quot;</span><span class="Constant">push by u4 should fail</span><span class="Statement">&quot;</span>
+        <span class="Special">tsh &quot;</span>
+            <span class="Statement">push u4:foo master</span>;         <span class="Special">/WM refs/heads/master foo u4 DENIED by fallthru/</span>
+                                        <span class="Special">/To u4:foo/</span>
+                                        <span class="Special">/remote rejected.*hook declined/</span>
+                                        <span class="Special">/failed to push some refs/</span>
+        <span class="Special">&quot;</span>
+
+        name <span class="Statement">&quot;</span><span class="Constant">push by u3 should succeed</span><span class="Statement">&quot;</span>
+        <span class="Special">tsh &quot;</span>
+            <span class="Statement">push u3:foo master</span>; ok;     <span class="Special">/To u3:foo/</span>; <span class="Special">/master.-..master/</span>
+        <span class="Special">&quot;</span>
+
+        name <span class="Statement">&quot;</span><span class="Constant">rewind by u3 should fail</span><span class="Statement">&quot;</span>
+        <span class="Special">tsh &quot;</span>
+            <span class="Statement">reset-h start</span>;      ok;     <span class="Special">/HEAD is now at .* aa /</span>
+            <span class="Statement">push u3:foo +master</span>; !ok;   <span class="Special">/rejected.*hook declined/</span>
+                                        <span class="Special">/failed to push some refs/</span>
+        <span class="Special">&quot;</span>
+
+        name <span class="Statement">&quot;</span><span class="Constant">rewind by u2 should succeed</span><span class="Statement">&quot;</span>
+        <span class="Special">tsh &quot;</span>
+            <span class="Statement">push u2:foo +master</span>; ok;    <span class="Special">/To u2:foo/</span>
+                                        <span class="Special">/forced update/</span>
+        <span class="Special">&quot;</span>
+
+        name <span class="Statement">&quot;</span><span class="Constant">push by u2 should fail</span><span class="Statement">&quot;</span>
+        <span class="Special">tsh &quot;</span>
+            <span class="Statement">reset-h end</span>;        ok;     <span class="Special">/HEAD is now at .* ff /</span>
+            <span class="Statement">push u2:foo master</span>;         <span class="Special">/WM refs/heads/master foo u2 DENIED by fallthru/</span>
+                                        <span class="Special">/To u2:foo/</span>
+                                        <span class="Special">/remote rejected.*hook declined/</span>
+                                        <span class="Special">/failed to push some refs/</span>
+        <span class="Special">&quot;</span>
+
+        name <span class="Statement">&quot;</span><span class="Constant">push by u1 should succeed</span><span class="Statement">&quot;</span>
+        <span class="Special">tsh &quot;</span>
+            <span class="Statement">push u1:foo master</span>; ok;     <span class="Special">/master.-..master/</span>
+        <span class="Special">&quot;</span>
+
+        name INTERNAL
+    <span class="Statement">done</span>
+<span class="Statement">done</span>
+</pre>
+</body>
+</html>
