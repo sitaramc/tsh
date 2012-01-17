@@ -56,31 +56,31 @@ END { say "1..$testnum"; }
         my ($a, $b, $c, $a2, $b2, $c2);
 
         ($a, $b, $c) = test("ls; ls foo; !ok; ls bar; ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
-        $c =~ s/^# L:.*\n//gm;
+        $c =~ s/^(\s*|# )L:.*\n//gm;
 
         ($a2, $b2, $c2) = test("ls", " ls foo\n !ok; ls bar", " ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
         Eq($a, $a2);
         Eq($b, $b2);
-        $c2 =~ s/^# L:.*\n//gm;
+        $c2 =~ s/^(\s*|# )L:.*\n//gm;
         Eq($c, $c2);
         die "\n\nc=$c,,,\n\nc2=$c2,,,\n\n" unless $c eq $c2;
 
         ($a2, $b2, $c2) = test("ls", " ls foo\n # comment line\n !ok; ls bar", " ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
         Eq($a, $a2);
         Eq($b, $b2);
-        $c2 =~ s/^# L:.*\n//gm;
+        $c2 =~ s/^(\s*|# )L:.*\n//gm;
         Eq($c, $c2);
 
         ($a2, $b2, $c2) = test("ls", " ls foo\n !ok", " ls bar; ls baz; ok or no baz; clone /tmp/2b /tmp/not2b");
         Eq($a, $a2);
         Eq($b, $b2);
-        $c2 =~ s/^# L:.*\n//gm;
+        $c2 =~ s/^(\s*|# )L:.*\n//gm;
         Eq($c, $c2);
 
         ($a2, $b2, $c2) = test(" ls     ", "    ls     foo\n !ok; ls bar", " ls baz; ok         or        no baz; clone /tmp/2b /tmp/not2b");
         Eq($a, $a2);
         Eq($b, $b2);
-        $c2 =~ s/^# L:.*\n//gm;
+        $c2 =~ s/^(\s*|# )L:.*\n//gm;
         $c2 =~ s/ +/ /g;
         $c  =~ s/ +/ /g;
         Eq($c, $c2);
