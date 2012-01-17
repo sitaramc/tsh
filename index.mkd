@@ -22,6 +22,10 @@ The test program for 'gitpod' is TAP compliant and can be found
 colored version is
 [here](http://sitaramc.github.com/tsh/doc/gitpod-test.html).
 
+Although gitolite has too many tests for me to convert all of them, all new
+tests will use tsh.  [Here](http://sitaramc.github.com/tsh/doc/gl-t12.html) is
+the only one that was born after tsh came into being.
+
 ## requirements
 
 perl 5.10.0 or later, and any posix shell that understands very simple
