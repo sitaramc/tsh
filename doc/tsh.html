@@ -160,7 +160,7 @@ nothing on success, but on failure it prints a very brief error summary (like
 
 <p>In both cases, test-specific messages (see later) are printed to STDERR.</p>
 
-<p>Also in both cases, the TSH_VERBOSE env var changes the output:</p>
+<p>Also in both cases, the <code>TSH_VERBOSE</code> env var changes the output:</p>
 
 <ul>
 <li><strong>0</strong>: (for 'tsh') suppress even the error summary (only exit code).</li>
@@ -290,11 +290,14 @@ tsh 'cat file; perl /^foo/m; ok or die bad file'
 
 <ul>
 <li><code>tt</code> -- step the commit timestamps by one minute</li>
-<li><code>dc foo bar [...]</code> -- do a dummy_commit of the file 'foo', then 'bar',
+<li><code>tc foo bar [...]</code> -- do a test-commit of the file 'foo', then 'bar',
 etc., appending a fixed known line to each.  You can insert 'tt' among
-these arguments, (e.g., <code>dc foo tt bar tt baz</code>), to step the timer tick if
+these arguments, (e.g., <code>tc foo tt bar tt baz</code>), to step the timer tick if
 you need that.</li>
 </ul>
+
+<p>You can use 'test-tick' and 'test-commit' in scripts for clarity if you don't
+like the short forms.</p>
 
 <p><a name="doc_tsh_miscellaneous_commands_"></a></p>
 
