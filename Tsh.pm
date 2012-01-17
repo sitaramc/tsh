@@ -132,8 +132,16 @@ sub try {
     return (not $err_count);
 }
 
+# run() differs from try() in that
+#   -   uses open(), not backticks
+#   -   takes only one command, not tsh-things like ok, /patt/ etc
+#   -   -   if you pass it an array it uses the list form!
+
 sub run {
-    try(@_);
+    open(my $fh, "-|", @_) or die "tell sitaram $!";
+    local $/ = undef; $text = <$fh>;
+    close $fh; warn "tell sitaram $!" if $!;
+    $rc = ($? >> 8);
     return $text;
 }
 
