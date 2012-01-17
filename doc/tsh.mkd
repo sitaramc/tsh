@@ -110,7 +110,7 @@ nothing on success, but on failure it prints a very brief error summary (like
 
 In both cases, test-specific messages (see later) are printed to STDERR.
 
-Also in both cases, the TSH_VERBOSE env var changes the output:
+Also in both cases, the `TSH_VERBOSE` env var changes the output:
 
   * **0**: (for 'tsh') suppress even the error summary (only exit code).
   * **1**: print test failure messages and unchecked non-zero return codes
@@ -214,7 +214,7 @@ This replaces the /pattern/ test with a 'perl /pattern/m' test, and then the
 ### git specific commands
 
   * `tt` -- step the commit timestamps by one minute
-  * `tc foo bar [...]` -- do a test_commit of the file 'foo', then 'bar',
+  * `tc foo bar [...]` -- do a test-commit of the file 'foo', then 'bar',
     etc., appending a fixed known line to each.  You can insert 'tt' among
     these arguments, (e.g., `tc foo tt bar tt baz`), to step the timer tick if
     you need that.
