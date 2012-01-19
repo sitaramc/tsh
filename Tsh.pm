@@ -461,13 +461,14 @@ sub fail {
         say STDERR "# $msg2";
     }
 
-    dbg(1, "FAIL: $msg1", $testname || '', "test number $testnum", "L: $line");
+    local $TSH_VERBOSE = 1 if $ENV{TSH_ERREXIT};
+    dbg(1, "FAIL: $msg1", $testname || '', "test number $testnum", "L: $line", "results:\n$text");
 
     # count the error and add the testname to the list if it is set
     $err_count++;
     push @errors_in, $testname if $testname;
 
-    return unless $die;
+    return unless $die or $ENV{TSH_ERREXIT};
     dbg(1, "exiting at cmd $cmd\n");
 
     exit ( $rc || 74 );

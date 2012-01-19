@@ -124,6 +124,9 @@ Also in both cases, the `TSH_VERBOSE` env var changes the output:
 
 (Setting it to 4 produces too much output to be useful most of the time).
 
+`TSH_ERREXIT` (named after the long name of bash's '-e' option) forces an exit
+on the first error, which helps when developing scripts.
+
 ## tsh commands in detail
 
 ### macros
