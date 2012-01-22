@@ -1,4 +1,7 @@
 <head>
+<title>
+tsh -- quick and easy testing shell
+</title>
 <style>
     body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
     h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
@@ -175,6 +178,9 @@ nothing on success, but on failure it prints a very brief error summary (like
 </ul>
 
 <p>(Setting it to 4 produces too much output to be useful most of the time).</p>
+
+<p><code>TSH_ERREXIT</code> (named after the long name of bash's '-e' option) forces an exit
+on the first error, which helps when developing scripts.</p>
 
 <p><a name="doc_tsh_tsh_commands_in_detail_"></a></p>
 
