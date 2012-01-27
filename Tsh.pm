@@ -70,8 +70,8 @@ use 5.10.0;
     select(STDERR); $|++;
     select(STDOUT); $|++;
 
-# set the timestamp
-    test_tick();
+# set the timestamp (needed only under harness)
+    test_tick() if $ENV{HARNESS_ACTIVE};
 
 # ----------------------------------------------------------------------
 # this is for one-liner access from outside, using @ARGV, as in:
@@ -572,12 +572,16 @@ sub dummy_commits {
             test_tick();
             next;
         }
-        my $ts = localtime($tick);
+        my $ts = ($tick ? localtime($tick) : localtime());
         _sh("echo $f at $ts >> $f && git add $f && git commit -m '$f at $ts'")
     }
 }
 
 sub test_tick {
+    unless ($ENV{HARNESS_ACTIVE}) {
+        sleep 1;
+        return;
+    }
     $tick += 60 if $tick;
     $tick ||= 1310000000;
     $ENV{GIT_COMMITTER_DATE} = "$tick +0530";
