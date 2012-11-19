@@ -3,6 +3,9 @@ use 5.10.0;
 use strict;
 use warnings;
 
+select STDERR; $|++;
+select STDOUT; $|++;
+
 # too bad we can't test it with itself but that would break some cosmic law
 # somewhere, not to mention make the results unreliable :-)
 

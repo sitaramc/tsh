@@ -13,65 +13,65 @@ use 5.10.0;
 # ----------------------------------------------------------------------
 # modules
 
-    package Tsh;
+package Tsh;
 
-    use Exporter 'import';
-    @EXPORT = qw(
-        try run cmp AUTOLOAD
-        rc error_count text lines error_list put
-        cd tsh_tempdir
+use Exporter 'import';
+@EXPORT = qw(
+  try run cmp AUTOLOAD
+  rc error_count text lines error_list put
+  cd tsh_tempdir
 
-        $HOME $PWD $USER
-    );
-    @EXPORT_OK = qw();
+  $HOME $PWD $USER
+);
+@EXPORT_OK = qw();
 
-    use Env qw(@PATH HOME PWD USER TSH_VERBOSE);
-    # other candidates:
-    # GL_ADMINDIR GL_BINDIR GL_RC GL_REPO_BASE_ABS GL_REPO GL_USER
+use Env qw(@PATH HOME PWD USER TSH_VERBOSE);
+# other candidates:
+# GL_ADMINDIR GL_BINDIR GL_RC GL_REPO_BASE_ABS GL_REPO GL_USER
 
-    use strict;
-    use warnings;
+use strict;
+use warnings;
 
-    use Text::Tabs;         # only used for formatting the usage() message
-    use Text::ParseWords;
+use Text::Tabs;    # only used for formatting the usage() message
+use Text::ParseWords;
 
-    use File::Temp qw(tempdir);
-    END { chdir($ENV{HOME}); }
-    # we need this END handler *after* the 'use File::Temp' above.  Without
-    # this, if $PWD at exit was $tempdir, you get errors like "cannot remove
-    # path when cwd is [...] at /usr/share/perl5/File/Temp.pm line 902".
+use File::Temp qw(tempdir);
+END { chdir( $ENV{HOME} ); }
+# we need this END handler *after* the 'use File::Temp' above.  Without
+# this, if $PWD at exit was $tempdir, you get errors like "cannot remove
+# path when cwd is [...] at /usr/share/perl5/File/Temp.pm line 902".
 
-    use Data::Dumper;
+use Data::Dumper;
 
 # ----------------------------------------------------------------------
 # globals
 
-    my $rc;         # return code from backticked (external) programs
-    my $text;       # STDOUT+STDERR of backticked (external) programs
-    my $lec;        # the last external command (the rc and text are from this)
-    my $cmd;        # the current command
+my $rc;      # return code from backticked (external) programs
+my $text;    # STDOUT+STDERR of backticked (external) programs
+my $lec;     # the last external command (the rc and text are from this)
+my $cmd;     # the current command
 
-    my $testnum;    # current test number, for info in TAP output
-    my $testname;   # current test name, for error info to user
-    my $line;       # current line number
+my $testnum;     # current test number, for info in TAP output
+my $testname;    # current test name, for error info to user
+my $line;        # current line number and text
 
-    my $err_count;  # count of test failures
-    my @errors_in;  # list of testnames that errored
+my $err_count;   # count of test failures
+my @errors_in;   # list of testnames that errored
 
-    my $tick;       # timestamp for git commits
+my $tick;        # timestamp for git commits
 
-    my %autoloaded;
-    my $tempdir = '';
+my %autoloaded;
+my $tempdir = '';
 
 # ----------------------------------------------------------------------
 # setup
 
 # unbuffer STDOUT and STDERR
-    select(STDERR); $|++;
-    select(STDOUT); $|++;
+select(STDERR); $|++;
+select(STDOUT); $|++;
 
 # set the timestamp (needed only under harness)
-    test_tick() if $ENV{HARNESS_ACTIVE};
+test_tick() if $ENV{HARNESS_ACTIVE};
 
 # ----------------------------------------------------------------------
 # this is for one-liner access from outside, using @ARGV, as in:
@@ -85,14 +85,14 @@ sub tsh {
 
     if (@ARGV) {
         # simple, single argument which is a readable filename
-        if (@ARGV == 1 and $ARGV[0] !~ /\s/ and -r $ARGV[0]) {
+        if ( @ARGV == 1 and $ARGV[0] !~ /\s/ and -r $ARGV[0] ) {
             # take the contents of the file
             @lines = <>;
         } else {
             # more than one argument *or* not readable filename
             # just take the arguments themselves as the command list
             @lines = @ARGV;
-            @ARGV = ();
+            @ARGV  = ();
         }
     } else {
         # no arguments given, take STDIN
@@ -104,7 +104,7 @@ sub tsh {
     try(@lines);
 
     # print error summary by default
-    if (not defined $TSH_VERBOSE) {
+    if ( not defined $TSH_VERBOSE ) {
         say STDERR "$err_count error(s)" if $err_count;
     }
 
@@ -115,7 +115,7 @@ sub tsh {
 # (later) handles single commands
 
 sub try {
-    $rc = $err_count = 0;
+    $line = $rc = $err_count = 0;
     @errors_in = ();
 
     # break up multiline arguments into separate lines
@@ -128,8 +128,8 @@ sub try {
     $err_count++ if $rc;
 
     # finish up...
-    dbg(1, "$err_count error(s)") if $err_count;
-    return (not $err_count);
+    dbg( 1, "$err_count error(s)" ) if $err_count;
+    return ( not $err_count );
 }
 
 # run() differs from try() in that
@@ -138,28 +138,28 @@ sub try {
 #   -   -   if you pass it an array it uses the list form!
 
 sub run {
-    open(my $fh, "-|", @_) or die "tell sitaram $!";
+    open( my $fh, "-|", @_ ) or die "tell sitaram $!";
     local $/ = undef; $text = <$fh>;
     close $fh; warn "tell sitaram $!" if $!;
-    $rc = ($? >> 8);
+    $rc = ( $? >> 8 );
     return $text;
 }
 
 sub put {
-    my($file, $data) = @_;
+    my ( $file, $data ) = @_;
     die "probable quoting error in arguments to put: $file\n" if $file =~ /^\s*['"]/;
     my $mode = ">";
     $mode = "|-" if $file =~ s/^\s*\|\s*//;
 
     $rc = 0;
     my $fh;
-    open($fh, $mode, $file) and
-    print $fh $data and
-    close $fh and
-    return 1;
+    open( $fh, $mode, $file )
+      and print $fh $data
+      and close $fh
+      and return 1;
 
     $rc = 1;
-    dbg(1, "put $file: $!");
+    dbg( 1, "put $file: $!" );
     return '';
 }
 
@@ -169,8 +169,8 @@ sub put {
 sub cd {
     my $dir = shift || '';
     _cd($dir);
-    dbg(1, "cd $dir: $!") if $rc;
-    return (not $rc);
+    dbg( 1, "cd $dir: $!" ) if $rc;
+    return ( not $rc );
 }
 
 # this is classic AUTOLOAD, almost from the perlsub manpage.  Although, if
@@ -178,13 +178,13 @@ sub cd {
 # to predeclare ls, with `sub ls;`.
 sub AUTOLOAD {
     my $program = $Tsh::AUTOLOAD;
-    dbg(4, "program = $program, arg=$_[0]");
+    dbg( 4, "program = $program, arg=$_[0]" );
     $program =~ s/.*:://;
     $autoloaded{$program}++;
 
     die "tsh's autoload support expects only one arg\n" if @_ > 1;
     _sh("$program $_[0]");
-    return (not $rc);       # perl truth
+    return ( not $rc );    # perl truth
 }
 
 # ----------------------------------------------------------------------
@@ -207,16 +207,17 @@ sub error_count {
 }
 
 sub error_list {
-    return ( wantarray
-        ?   @errors_in
-        :   join("\n", @errors_in)
+    return (
+        wantarray
+        ? @errors_in
+        : join( "\n", @errors_in )
     );
 }
 
 sub tsh_tempdir {
     # create tempdir if not already done
-    $tempdir = tempdir("tsh_tempdir.XXXXXXXXXX", TMPDIR => 1, CLEANUP => 1) unless $tempdir;
-        # XXX TODO that 'UNLINK' doesn't work for Ctrl_C
+    $tempdir = tempdir( "tsh_tempdir.XXXXXXXXXX", TMPDIR => 1, CLEANUP => 1 ) unless $tempdir;
+    # XXX TODO that 'UNLINK' doesn't work for Ctrl_C
 
     return $tempdir;
 }
@@ -237,15 +238,17 @@ sub rc_lines {
         my $_ = shift @lines;
         chomp; $_ = trim_ws($_);
 
+        $line++;
+
         # this also sets $testname
         next if is_comment_or_empty($_);
 
-        dbg(2, "L: $_");
-        $line = $_;     # save line for printing with 'FAIL:'
+        dbg( 2, "L: $_" );
+        $line .= ": $_";    # save line for printing with 'FAIL:'
 
         # a DEF has to be on a line by itself
-        if ( /^DEF\s+([-.\w]+)\s*=\s*(\S.*)$/ ) {
-            def($1, $2);
+        if (/^DEF\s+([-.\w]+)\s*=\s*(\S.*)$/) {
+            def( $1, $2 );
             next;
         }
 
@@ -266,8 +269,8 @@ sub rc_lines {
             );
 
             # warn if the previous command failed but rc is not being checked
-            if ($rc and not $testing_cmd) {
-                dbg(1, "rc: $rc from cmd prior to '$cmd'\n");
+            if ( $rc and not $testing_cmd ) {
+                dbg( 1, "rc: $rc from cmd prior to '$cmd'\n" );
                 # count this as a failure, for exit status purposes
                 $err_count++;
                 # and reset the rc, otherwise for example 'ls foo; tt; tt; tt'
@@ -277,25 +280,25 @@ sub rc_lines {
             }
 
             # prepare to run the command
-            dbg(3, "C: $cmd");
-            if (def($cmd)) {
+            dbg( 3, "C: $cmd" );
+            if ( def($cmd) ) {
                 # expand macro and replace head of @cmds (unshift)
-                dbg(2, "DEF: $cmd");
-                unshift @cmds, cmds(def($cmd));
+                dbg( 2, "DEF: $cmd" );
+                unshift @cmds, cmds( def($cmd) );
             } else {
                 parse($cmd);
             }
             # reset rc if checking is done
             $rc = 0 if $testing_cmd;
-                # assumes you will (a) never have *both* 'ok' and '!ok' after
-                # an action command, and (b) one of them will come immediately
-                # after the action command, with /patt/ only after it.
+            # assumes you will (a) never have *both* 'ok' and '!ok' after
+            # an action command, and (b) one of them will come immediately
+            # after the action command, with /patt/ only after it.
         }
     }
 }
 
 sub def {
-    my($cmd, $list) = @_;
+    my ( $cmd, $list ) = @_;
     state %def;
     %def = read_rc_file() unless %def;
 
@@ -308,16 +311,16 @@ sub def {
 
     # get mode: split the $cmd at spaces, see if there is a definition
     # available, substitute any %1, %2, etc., in it and send it back
-    my ($c, @d) = shellwords($cmd);
-    my $e;                              # the expanded value
-    if ($e = $def{$c}) {                # starting value
-        for my $i (1..9) {
+    my ( $c, @d ) = shellwords($cmd);
+    my $e;    # the expanded value
+    if ( $e = $def{$c} ) {    # starting value
+        for my $i ( 1 .. 9 ) {
             last unless $e =~ /%$i/;    # no more %N's (we assume sanity)
             die "$def{$c} requires more arguments\n" unless @d;
             my $f = shift @d;           # get the next datum
             $e =~ s/%$i/$f/g;           # and substitute %N all over
         }
-        return join(" ", $e, @d);       # join up any remaining data
+        return join( " ", $e, @d );     # join up any remaining data
     }
     return '';
 }
@@ -334,12 +337,12 @@ sub _sh {
     my $cmd = shift;
     # TODO: switch to IPC::Open3 or something...?
 
-    dbg(4, "  running: ( $cmd ) 2>&1");
-    $text = `( $cmd ) 2>&1; echo -n RC=\$?`;
-    $lec = $cmd;
-    dbg(4, "  results:\n$text");
+    dbg( 4, "  running: ( $cmd ) 2>&1" );
+    $text = `( $cmd ) 2>&1; /bin/echo -n RC=\$?`;
+    $lec  = $cmd;
+    dbg( 4, "  results:\n$text" );
 
-    if ($text =~ /RC=(\d+)$/) {
+    if ( $text =~ /RC=(\d+)$/ ) {
         $rc = $1;
         $text =~ s/RC=\d+$//;
     } else {
@@ -352,34 +355,34 @@ sub _perl {
     local $_;
     $_ = $text;
 
-    dbg(4, "  eval: $perl");
+    dbg( 4, "  eval: $perl" );
     my $evrc = eval $perl;
 
     if ($@) {
         $rc = 1;    # shell truth
-        dbg(1, $@);
+        dbg( 1, $@ );
         # leave $text unchanged
     } else {
         $rc = not $evrc;
-            # $rc is always shell truth, so we need to cover the case where
-            # there was no error but it still returned a perl false
+        # $rc is always shell truth, so we need to cover the case where
+        # there was no error but it still returned a perl false
         $text = $_;
     }
-    dbg(4, "  eval-rc=$evrc, results:\n$text");
+    dbg( 4, "  eval-rc=$evrc, results:\n$text" );
 }
 
 sub parse {
     my $cmd = shift;
 
-    if ($cmd =~ /^sh (.*)/) {
+    if ( $cmd =~ /^sh (.*)/ ) {
 
         _sh($1);
 
-    } elsif ($cmd =~ /^perl (.*)/) {
+    } elsif ( $cmd =~ /^perl (.*)/ ) {
 
         _perl($1);
 
-    } elsif ( $cmd eq 'tt' or $cmd eq 'test-tick') {
+    } elsif ( $cmd eq 'tt' or $cmd eq 'test-tick' ) {
 
         test_tick();
 
@@ -404,26 +407,26 @@ sub parse {
     } elsif ( $cmd =~ '^put(?:\s+(\S.*))?$' ) {
 
         if ($1) {
-            put($1, $text);
+            put( $1, $text );
         } else {
             print $text if defined $text;
         }
 
     } elsif ( $cmd =~ m(^ok(?:\s+or\s+(.*))?$) ) {
 
-        $rc ? fail("ok, rc=$rc from $lec", $1 || '') : ok();
+        $rc ? fail( "ok, rc=$rc from $lec", $1 || '' ) : ok();
 
     } elsif ( $cmd =~ m(^!ok(?:\s+or\s+(.*))?$) ) {
 
-        $rc ? ok() : fail("!ok, rc=0 from $lec", $1 || '');
+        $rc ? ok() : fail( "!ok, rc=0 from $lec", $1 || '' );
 
     } elsif ( $cmd =~ m(^/(.*?)/(?:\s+or\s+(.*))?$) ) {
 
-        expect($1, $2);
+        expect( $1, $2 );
 
     } elsif ( $cmd =~ m(^!/(.*?)/(?:\s+or\s+(.*))?$) ) {
 
-        not_expect($1, $2);
+        not_expect( $1, $2 );
 
     } else {
 
@@ -454,7 +457,7 @@ sub fail {
     say "not ok ($testnum)" if $ENV{HARNESS_ACTIVE};
 
     my $die = 0;
-    my ($msg1, $msg2) = @_;
+    my ( $msg1, $msg2 ) = @_;
     if ($msg2) {
         # if arg2 is non-empty, print it regardless of debug level
         $die = 1 if $msg2 =~ s/^die //;
@@ -462,49 +465,50 @@ sub fail {
     }
 
     local $TSH_VERBOSE = 1 if $ENV{TSH_ERREXIT};
-    dbg(1, "FAIL: $msg1", $testname || '', "test number $testnum", "L: $line", "results:\n$text");
+    dbg( 1, "FAIL: $msg1", $testname || '', "test number $testnum", "L: $line", "results:\n$text" );
 
     # count the error and add the testname to the list if it is set
     $err_count++;
     push @errors_in, $testname if $testname;
 
     return unless $die or $ENV{TSH_ERREXIT};
-    dbg(1, "exiting at cmd $cmd\n");
+    dbg( 1, "exiting at cmd $cmd\n" );
 
-    exit ( $rc || 74 );
+    exit( $rc || 74 );
 }
 
 sub cmp {
-    # compare input string with text()
-    my $text = text();
+    # compare input string with second input string or text()
     my $in = shift;
+    my $text = ( @_ ? +shift : text() );
 
-    if ($text eq $in) {
+    if ( $text eq $in ) {
         ok();
     } else {
-        fail('cmp failed', '');
+        fail( 'cmp failed', '' );
+        dbg( 4, "\n\ntext = <<<$text>>>, in = <<<$in>>>\n\n" );
     }
 }
 
 sub expect {
-    my ($patt, $msg) = @_;
+    my ( $patt, $msg ) = @_;
     $msg =~ s/^\s+// if $msg;
     my $sm;
-    if ($sm = sm($patt)) {
-        dbg(4, "  M: $sm");
+    if ( $sm = sm($patt) ) {
+        dbg( 4, "  M: $sm" );
         ok();
     } else {
-        fail("/$patt/", $msg || '');
+        fail( "/$patt/", $msg || '' );
     }
 }
 
 sub not_expect {
-    my ($patt, $msg) = @_;
+    my ( $patt, $msg ) = @_;
     $msg =~ s/^\s+// if $msg;
     my $sm;
-    if ($sm = sm($patt)) {
-        dbg(4, "  M: $sm");
-        fail("!/$patt/", $msg || '');
+    if ( $sm = sm($patt) ) {
+        dbg( 4, "  M: $sm" );
+        fail( "!/$patt/", $msg || '' );
     } else {
         ok();
     }
@@ -530,7 +534,7 @@ sub is_comment_or_empty {
         $testname = $1;
         say "# $1";
     }
-    return (/^#/ or /^$/);
+    return ( /^#/ or /^$/ );
 }
 
 sub cmds {
@@ -547,7 +551,7 @@ sub dbg {
     return unless $TSH_VERBOSE;
     my $level = shift;
     return unless $TSH_VERBOSE >= $level;
-    my $all = join("\n", grep(/./, @_));
+    my $all = join( "\n", grep( /./, @_ ) );
     chomp($all);
     $all =~ s/\n/\n\t/g;
     say STDERR "# $all";
@@ -555,7 +559,7 @@ sub dbg {
 
 sub ddump {
     for my $i (@_) {
-        print STDERR "DBG: " .  Dumper($i);
+        print STDERR "DBG: " . Dumper($i);
     }
 }
 
@@ -571,7 +575,7 @@ Meanwhile, here are your local 'macro' definitions:
     my %m = read_rc_file();
     my @m = map { "$_\t$m{$_}\n" } sort keys %m;
     $tabstop = 16;
-    print join("", expand(@m));
+    print join( "", expand(@m) );
     exit 1;
 }
 
@@ -579,25 +583,25 @@ Meanwhile, here are your local 'macro' definitions:
 # git-specific internal service subs
 
 sub dummy_commits {
-    for my $f (split ' ', shift) {
-        if ($f eq 'tt' or $f eq 'test-tick') {
+    for my $f ( split ' ', shift ) {
+        if ( $f eq 'tt' or $f eq 'test-tick' ) {
             test_tick();
             next;
         }
-        my $ts = ($tick ? localtime($tick) : localtime());
-        _sh("echo $f at $ts >> $f && git add $f && git commit -m '$f at $ts'")
+        my $ts = ( $tick ? gmtime( $tick + 19800 ) : gmtime() );
+        _sh("echo $f at $ts >> $f && git add $f && git commit -m '$f at $ts'");
     }
 }
 
 sub test_tick {
-    unless ($ENV{HARNESS_ACTIVE}) {
+    unless ( $ENV{HARNESS_ACTIVE} ) {
         sleep 1;
         return;
     }
     $tick += 60 if $tick;
     $tick ||= 1310000000;
     $ENV{GIT_COMMITTER_DATE} = "$tick +0530";
-    $ENV{GIT_AUTHOR_DATE} = "$tick +0530";
+    $ENV{GIT_AUTHOR_DATE}    = "$tick +0530";
 }
 
 # ----------------------------------------------------------------------
@@ -608,7 +612,7 @@ sub read_rc_file {
     my $rctext;
     if ( -r $rcfile ) {
         local $/ = undef;
-        open(my $rcfh, "<", $rcfile) or die "this should not happen: $!\n";
+        open( my $rcfh, "<", $rcfile ) or die "this should not happen: $!\n";
         $rctext = <$rcfh>;
     } else {
         # this is the default "rc" content
@@ -632,7 +636,7 @@ sub read_rc_file {
     }
 
     # ignore everything except lines of the form "aa = bb cc dd"
-    my %commands = ($rctext =~ /^\s*([-.\w]+)\s*=\s*(\S.*)$/gm);
+    my %commands = ( $rctext =~ /^\s*([-.\w]+)\s*=\s*(\S.*)$/gm );
     return %commands;
 }
 
