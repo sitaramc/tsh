@@ -40,8 +40,6 @@ code; weird shell constructs for simple things; constantly putting in
 write, I have to run lots of shell commands, capture the output, and check
 that.</p>
 
-<p><a name="doc_tsh_aim_"></a></p>
-
 <h2>aim</h2>
 
 <p>Less typing, less output.</p>
@@ -58,46 +56,44 @@ colored version is
 tests will use tsh.  <a href="http://sitaramc.github.com/tsh/doc/gl-t12.html">Here</a> is
 the only one that was born after tsh came into being.</p>
 
-<p><a name="doc_tsh_requirements_"></a></p>
-
 <h2>requirements</h2>
 
 <p>perl 5.10.0 or later, and any posix shell that understands very simple
 redirection.</p>
 
-<p><a name="doc_tsh_input_"></a></p>
-
 <h2>input</h2>
 
 <p>I assume you have read the <a href="http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html">examples</a> already.</p>
 
-<p><a name="doc_tsh_syntax_"></a></p>
-
 <h3>syntax</h3>
 
-<p>Input is one or more lines.</p>
+<p>Input is one or more lines of text, obtained as follows:</p>
 
 <ul>
-<li>no arguments: STDIN is the input</li>
-<li>exactly one argument which is a readable filename: its contents are the input</li>
-<li>otherwise: the arguments themselves are the input
-<ul>
-<li>if an argument is multi-line, it is split at newlines</li>
-<li>this is what you saw in the <a href="http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html">examples</a> section</li>
-</ul></li>
+<li>if there are no arguments, use STDIN</li>
+<li>if there is exactly one argument <em>and</em> it is a readable filename, use its
+contents</li>
+<li>otherwise use the argument list, treating each argument as if it started
+on a new line</li>
 </ul>
 
-<p>Comments are allowed but not in the middle of a line (i.e., the whole line
-needs to be a comment).  Leading whitespace is always thrown away, but not
-elsewhere.  There are no continuation lines or include files.</p>
+<p>This input is separated into tsh commands by</p>
 
-<p>Each line is one or more commands, separated by unescaped semicolons.</p>
+<ul>
+<li>unescaped semicolons</li>
+<li>newlines</li>
+</ul>
+
+<p>(Side effect: this means newlines can be embedded within an argument also if
+you find that more convenient, as you can see in several <a href="http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html">examples</a>).</p>
 
 <p>The only way to escape a semicolon is to precede it with a backslash.  Any
 quotes are taken literally so don't try to use those to escape semicolons.
 <code>TSH_VERBOSE=3</code> (or higher) will show the commands actually being run.</p>
 
-<p><a name="doc_tsh_hashhash_comments_testnames__"></a></p>
+<p>Comments are allowed but not in the middle of a line (i.e., the whole line
+needs to be a comment).  Leading whitespace is always thrown away, but not
+elsewhere.  There are no continuation lines or include files.</p>
 
 <h3>hashhash comments (testnames)</h3>
 
@@ -105,8 +101,6 @@ quotes are taken literally so don't try to use those to escape semicolons.
 then whitespace, are treated as supplying the "name" of that test; see the
 <code>error_list</code> function below.  This also serves as a progress report, getting
 printed (prefixed by a "# ") to STDOUT as the test runs.</p>
-
-<p><a name="doc_tsh_functions_available_to_perl_"></a></p>
 
 <h2>functions available to perl</h2>
 
@@ -150,8 +144,6 @@ effect, although they cause an extra fork or two so it may not be as
 efficient as doing it in pure perl.  Patches welcome.)</p></li>
 </ul>
 
-<p><a name="doc_tsh_output_"></a></p>
-
 <h2>output</h2>
 
 <p>The <strong>return value</strong> fits the language used so you can use it as a boolean as
@@ -182,11 +174,7 @@ nothing on success, but on failure it prints a very brief error summary (like
 <p><code>TSH_ERREXIT</code> (named after the long name of bash's '-e' option) forces an exit
 on the first error, which helps when developing scripts.</p>
 
-<p><a name="doc_tsh_tsh_commands_in_detail_"></a></p>
-
 <h2>tsh commands in detail</h2>
-
-<p><a name="doc_tsh_macros_"></a></p>
 
 <h3>macros</h3>
 
@@ -199,8 +187,6 @@ default set of macros, for example, a command of <code>empty</code> will run <co
 expansion.  Macro expansion is attempted even on the result of the previous
 macro expansion, so be careful you don't recurse.</p>
 
-<p><a name="doc_tsh_environment_commands_"></a></p>
-
 <h3>environment commands</h3>
 
 <ul>
@@ -209,8 +195,6 @@ the argument is <code>tsh_tmpdir</code>, it is replaced by the name of the tempd
 that tsh automatically creates when needed</li>
 <li><code>ENV foo='bar baz'</code> -- sets the env var foo</li>
 </ul>
-
-<p><a name="doc_tsh_testing_commands_"></a></p>
 
 <h3>testing commands</h3>
 
@@ -226,8 +210,6 @@ command contained a string that matched the pattern</li>
 
 <p>A note about the patterns: if you need to use <code>^</code> or <code>$</code>, please see the "perl
 code" section later.</p>
-
-<p><a name="doc_tsh_test_specific_messages_"></a></p>
 
 <h4>test-specific messages</h4>
 
@@ -249,8 +231,6 @@ the "output" section above.</p>
 immediate exit.  (If you're calling <code>tsh</code> from a shell script, your shell
 script will of course still run -- it is upto you to detect the death of 'tsh'
 using the exit status and do whatever you need to).</p>
-
-<p><a name="doc_tsh_perl_code_"></a></p>
 
 <h3>perl code</h3>
 
@@ -294,8 +274,6 @@ tsh 'cat file; perl /^foo/m; ok or die bad file'
 <p>This replaces the /pattern/ test with a 'perl /pattern/m' test, and then the
 'ok' is used to test the success or failure of the perl code.</p>
 
-<p><a name="doc_tsh_git_specific_commands_"></a></p>
-
 <h3>git specific commands</h3>
 
 <ul>
@@ -308,8 +286,6 @@ you need that.</li>
 
 <p>You can use 'test-tick' and 'test-commit' in scripts for clarity if you don't
 like the short forms.</p>
-
-<p><a name="doc_tsh_miscellaneous_commands_"></a></p>
 
 <h3>miscellaneous commands</h3>
 
@@ -342,14 +318,10 @@ to be escaped.</p>
 the <code>/m</code> modifier to the regex substitution.</p></li>
 </ul>
 
-<p><a name="doc_tsh_external_commands_"></a></p>
-
 <h3>external commands</h3>
 
 <p>Any command that is not one of the above will be treated as an external
 command.</p>
-
-<p><a name="doc_tsh_TAP_compliance_"></a></p>
 
 <h2>TAP compliance</h2>
 
