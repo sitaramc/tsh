@@ -37,23 +37,29 @@ I assume you have read the [examples][ex] already.
 
 ### syntax
 
-Input is one or more lines.
+Input is one or more lines of text, obtained as follows:
 
-  * no arguments: STDIN is the input
-  * exactly one argument which is a readable filename: its contents are the input
-  * otherwise: the arguments themselves are the input
-      * if an argument is multi-line, it is split at newlines
-      * this is what you saw in the [examples][ex] section
+  * if there are no arguments, use STDIN
+  * if there is exactly one argument *and* it is a readable filename, use its
+    contents
+  * otherwise use the argument list, treating each argument as if it started
+    on a new line
 
-Comments are allowed but not in the middle of a line (i.e., the whole line
-needs to be a comment).  Leading whitespace is always thrown away, but not
-elsewhere.  There are no continuation lines or include files.
+This input is separated into tsh commands by
 
-Each line is one or more commands, separated by unescaped semicolons.
+  * unescaped semicolons
+  * newlines
+
+(Side effect: this means newlines can be embedded within an argument also if
+you find that more convenient, as you can see in several [examples][ex]).
 
 The only way to escape a semicolon is to precede it with a backslash.  Any
 quotes are taken literally so don't try to use those to escape semicolons.
 `TSH_VERBOSE=3` (or higher) will show the commands actually being run.
+
+Comments are allowed but not in the middle of a line (i.e., the whole line
+needs to be a comment).  Leading whitespace is always thrown away, but not
+elsewhere.  There are no continuation lines or include files.
 
 ### hashhash comments (testnames)
 
