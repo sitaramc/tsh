@@ -1,34 +1,19 @@
-<head>
-<title>
-tsh -- quick and easy testing shell
-</title>
-<style>
-    body        { background: #fff; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
-    h1          { background: #ffb; margin-left: -30px;   border-top:    5px  solid #ccc; }
-    h2          { background: #ffb; margin-left: -20px;   border-top:    3px  solid #ddd; }
-    h3          { background: #ffb; margin-left: -10px; }
-    h4          { background: #ffb; }
-    code        { font-size:    1.1em;  background:  #ddf; }
-    pre         { margin-left:  2em;    background:  #ddf; }
-    pre code    { font-size:    1.1em;  background:  #ddf; }
-</style>
 
+<head>
+    <title>tsh -- quick and easy testing shell</title>
+<style>
+    body        { background: #fff; text-color: #000; margin-left:  40px;   font-size:  0.9em;  font-family: sans-serif; max-width: 800px; }
+    h1          { background: #ffb; text-color: #000; margin-left: -30px;   border-top:    5px  solid #ccc; }
+    h2          { background: #ffb; text-color: #000; margin-left: -20px;   border-top:    3px  solid #ddd; }
+    h3          { background: #ffb; text-color: #000; margin-left: -10px; }
+    h4          { background: #ffb; text-color: #000; }
+    code        { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+    pre         { margin-left:  2em;    background:  #ddf; text-color: #000; }
+    pre code    { font-size:    1.1em;  background:  #ddf; text-color: #000; }
+</style>
 </head>
 
-<p style="text-align:center">
-    <a href="master-toc.html">master TOC</a>
-|
-    <a href="master-toc.html#doc/tsh">chapter TOC</a>
-|
-    <a href="support.html">support</a>
-</p>
-
-
-<p><a name="tsh"></a></p>
-
-<h1>tsh -- quick and easy testing shell</h1>
-
-<p><a name="doc_tsh_why_"></a></p>
+<h1><a name="tsh"></a> tsh -- quick and easy testing shell</h1>
 
 <h2>why</h2>
 
@@ -44,17 +29,11 @@ that.</p>
 
 <p>Less typing, less output.</p>
 
-<p>Simple examples
-<a href="http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html">here</a>.</p>
+<p>Simple examples <a href="tsh-examples.sh.html">here</a>.</p>
 
 <p>The test program for 'gitpod' is TAP compliant and can be found
 <a href="https://github.com/sitaramc/gitpod/blob/master/t/t01">here</a>.  A syntax
-colored version is
-<a href="http://sitaramc.github.com/tsh/doc/gitpod-test.html">here</a>.</p>
-
-<p>Although gitolite has too many tests for me to convert all of them, all new
-tests will use tsh.  <a href="http://sitaramc.github.com/tsh/doc/gl-t12.html">Here</a> is
-the only one that was born after tsh came into being.</p>
+colored version is <a href="gitpod-test.html">here</a>.</p>
 
 <h2>requirements</h2>
 
@@ -63,7 +42,7 @@ redirection.</p>
 
 <h2>input</h2>
 
-<p>I assume you have read the <a href="http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html">examples</a> already.</p>
+<p>I assume you have read the <a href="tsh-examples.sh.html">examples</a> already.</p>
 
 <h3>syntax</h3>
 
@@ -85,7 +64,7 @@ on a new line</li>
 </ul>
 
 <p>(Side effect: this means newlines can be embedded within an argument also if
-you find that more convenient, as you can see in several <a href="http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html">examples</a>).</p>
+you find that more convenient, as you can see in several <a href="tsh-examples.sh.html">examples</a>).</p>
 
 <p>The only way to escape a semicolon is to precede it with a backslash.  Any
 quotes are taken literally so don't try to use those to escape semicolons.
