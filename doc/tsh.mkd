@@ -14,13 +14,11 @@ that.
 
 Less typing, less output.
 
-Simple examples
-[here](http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html).
+Simple examples [here](tsh-examples.sh.html).
 
 The test program for 'gitpod' is TAP compliant and can be found
 [here](https://github.com/sitaramc/gitpod/blob/master/t/t01).  A syntax
-colored version is
-[here](http://sitaramc.github.com/tsh/doc/gitpod-test.html).
+colored version is [here](gitpod-test.html).
 
 ## requirements
 
@@ -286,4 +284,4 @@ This is useful, for example, when running under 'prove -v', to serve as a more
 user-friendly progress indicator than a series of 'ok' or 'not ok' messages,
 while not affecting "prove" (without "-v").
 
-[ex]: http://sitaramc.github.com/tsh/doc/tsh-examples.sh.html
+[ex]: tsh-examples.sh.html
