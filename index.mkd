@@ -32,3 +32,7 @@ redirection.
 The rest of the documentation is [here][tsh].
 
 [ex]: tsh-examples.sh.html
+
+## license
+
+GPL v2; see COPYING file

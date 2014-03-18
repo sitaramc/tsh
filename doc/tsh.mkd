@@ -285,3 +285,7 @@ user-friendly progress indicator than a series of 'ok' or 'not ok' messages,
 while not affecting "prove" (without "-v").
 
 [ex]: tsh-examples.sh.html
+
+## license
+
+GPL v2; see COPYING file
