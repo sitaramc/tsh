@@ -364,5 +364,12 @@ END { say "1..$testnum"; }
     try("pwd");
     true($b eq (lines)[0]);     # just checking, heh!
 
+# cd -, change to previous directory
+    my @td = ();
+    try("cd; pwd;") and @td = lines;
+    true($ENV{HOME} eq (lines)[0]);
+    try("cd -; pwd;") and @td = lines;
+    true($b eq (lines)[0]);
+
     # clean up temp dir for any later tests
     try("cd; rm -rf $b/* $b/.git");
