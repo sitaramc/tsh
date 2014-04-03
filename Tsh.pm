@@ -15,6 +15,7 @@ use 5.10.0;
 
 package Tsh;
 
+use Cwd qw(chdir);
 use Exporter 'import';
 @EXPORT = qw(
   try run cmp AUTOLOAD
@@ -62,6 +63,7 @@ my $tick;        # timestamp for git commits
 
 my %autoloaded;
 my $tempdir = '';
+my $prevdir = '';
 
 # ----------------------------------------------------------------------
 # setup
@@ -329,6 +331,11 @@ sub _cd {
     my $dir = shift || $HOME;
     # a directory name of 'tsh_tempdir' is special
     $dir = tsh_tempdir() if $dir eq 'tsh_tempdir';
+    if ($dir eq '-') {
+        die 'Cannot `cd -`without a previous call to cd' unless $prevdir;
+        $dir = $prevdir;
+    }
+    $prevdir = $ENV{'PWD'};
     $rc = 0;
     chdir($dir) or $rc = 1;
 }
