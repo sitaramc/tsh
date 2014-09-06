@@ -5,6 +5,8 @@ BEGIN {
     $0 =~ m|^(/)?(.*)/| and unshift(@INC, ($1 || "$ENV{PWD}/") . $2);
 }
 
+use FindBin;
+use lib $FindBin::RealBin;
 use Tsh;
 
 Tsh::tsh();
