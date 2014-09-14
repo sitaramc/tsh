@@ -1,0 +1,151 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+use 5.10.0;
+use Data::Dumper;
+$Data::Dumper::Terse = 1;
+$Data::Dumper::Indent = 1;
+$Data::Dumper::Sortkeys = 1;
+
+my $TRF = ".test-record";
+
+# manual test creator -- just records manually done test into ".test-record",
+# which you can then rename and play back.
+#
+# Note that the file is APPENDED to, not overwritten each time.
+#
+# Special commands:
+#   ## <tsh's double hash comment>
+#   -       # discard previous command, output, and rc
+#   ok or die some message      # overrides builtin rc detection
+#   !ok or die some message     # same
+#   /some text/     # overrides builtin pattern generation from output of
+#                   # command; can use more than once
+
+prep();
+print STDERR color('yellow');
+while (<>) {
+    print STDERR color('reset');
+    chomp;
+
+    if (/^## (.*)/) {
+        id($1);
+    } elsif (/^-$/) {
+        discard();
+    } elsif (/^(ok or die .*)$/) {
+        ok($1);
+    } elsif (/^(!ok or die .*)$/) {
+        nok($1);
+    } elsif (m(^/.*/$)) {
+        test($_);
+    } else {
+        # command to be run
+        run($_);
+    }
+
+    print STDERR color('yellow');
+}
+done();
+
+{
+    my ($cmd, $text, $rc);      # implicitly set by run()
+    my (@tests, $ok_nok);       # explicitly set by user
+
+    my $trfh;
+
+    sub prep {
+        open(my $t, ">>", $TRF) or die "$! opening '$TRF'";
+        $trfh = $t;
+    }
+
+    sub id {
+        say $trfh "## " . +shift;
+        say $trfh '';
+    }
+
+    sub discard {
+        say STDERR "discarding '$cmd'" if $cmd;
+        $cmd = '';
+    }
+
+    sub _keep {
+        say $trfh "$cmd";
+        if ($ok_nok) {
+            say $trfh "    " . $ok_nok;
+        } else {
+            say $trfh ( $rc ? '    !ok' : '    ok' );
+        }
+
+        @tests = map { "/" . $_ . "/" } split /\n/, $text unless @tests;
+
+        for ( @tests ) {
+            say $trfh "    $_";
+        }
+        say $trfh '';
+
+        @tests = ();
+        $ok_nok = '';
+    }
+
+    sub ok {
+        $ok_nok = shift;
+    }
+
+    sub nok {
+        $ok_nok = shift;
+    }
+
+    sub test {
+        push @tests, shift;
+    }
+
+    sub run {
+        # munged from _sh() in Tsh.pm :)
+
+        _keep() if $cmd;
+
+        $cmd = shift;
+        # TODO: switch to IPC::Open3 or something...?
+
+        $text = `( $cmd ) 2>&1; /bin/echo -n RC=\$?`;
+        $text = morph($text);
+
+        if ( $text =~ /RC=(\d+)$/ ) {
+            $rc = $1;
+            $text =~ s/RC=\d+$//;
+        } else {
+            die "couldnt find RC= in result; this should not happen:\n$text\n\n...\n";
+        }
+
+        print STDERR $text;
+        say STDERR color($rc ? 'red' : 'green') . "RC=$rc" . color('reset');
+    }
+
+    sub done {
+        _keep() if $cmd;
+        close $trfh or die "$! on close";
+    }
+}
+
+{
+    my %colors;
+    sub color {
+        my $color = shift;
+        $color .= " bold" unless $color eq 'reset';
+        return ( $colors{$color} ||= `git config --get-color "" "$color"` );
+    }
+}
+
+{
+    # substitutions
+    sub morph {
+        my $text = shift;
+
+        $text =~ s($ENV{HOME})(/home/\\w+)g;
+        $text =~ s(at (\S+) line \d+\.$)(at $1)mg;
+        $text =~ s(^20\d\d-\d\d-\d\d\.\d\d:\d\d:\d\d \d+)(20..-..-..\\...:..:.. \\d+)mg;
+        $text =~ s/;/\\;/g;
+
+        return $text;
+    }
+}
