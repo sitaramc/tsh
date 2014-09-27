@@ -143,8 +143,10 @@ done();
 
         $text =~ s($ENV{HOME})(/home/\\w+)g;
         $text =~ s(at (\S+) line \d+\.$)(at $1)mg;
-        $text =~ s(^20\d\d-\d\d-\d\d\.\d\d:\d\d:\d\d \d+)(20..-..-..\\...:..:.. \\d+)mg;
         $text =~ s/;/\\;/g;
+
+        $text =~ s(^20\d\d-\d\d-\d\d\.\d\d:\d\d:\d\d \d+)(20..-..-..\\...:..:.. \\d+)mg;
+        $text =~ s(\b1\d{9}\b)(1\\d{9})g;
 
         return $text;
     }
