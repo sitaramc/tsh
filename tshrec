@@ -124,6 +124,7 @@ done();
     sub done {
         _keep() if $cmd;
         close $trfh or die "$! on close";
+        print STDERR color('reset');
     }
 }
 
