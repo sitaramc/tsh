@@ -12,7 +12,7 @@ $testnum = 0;
 
 sub tv {
     delete $ENV{TSH_VERBOSE};
-    $ENV{TSH_VERBOSE} = $_[0] if defined($_[0]) and $_[0] ~~ [0, 1, 2, 3, 4];
+    $ENV{TSH_VERBOSE} = $_[0] if defined($_[0]) and $_[0] >= 0 and $_[0] <= 4;
 }
 
 sub build_cmd {

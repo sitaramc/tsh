@@ -3,6 +3,8 @@ use 5.10.0;
 use strict;
 use warnings;
 
+use List::Util qw(any);
+
 select STDERR; $|++;
 select STDOUT; $|++;
 
@@ -20,6 +22,8 @@ select STDOUT; $|++;
         # grv == generic return value;
 
 END { say "1..$testnum"; }
+
+print STDERR "\nNOTE: some 'no such file' and 'permission denied' errors are EXPECTED!\n";
 
 # the run() command
     $grv = run("ls ext text");
@@ -147,14 +151,14 @@ END { say "1..$testnum"; }
     _try("ls");
     true(text() =~ /driver\.pm.*ext.*t01-basics/s);
     _try("ls abcdefgh; ok");
-    Eq(text(), "ls: cannot access abcdefgh: No such file or directory\n");
+    Eq(text(), "ls: cannot access 'abcdefgh': No such file or directory\n");
 
     clean();
     _try("## bad 1", "ls non-ex;  ok", "## good 1", "ls ext;  ok",
          "## bad 2", "ls non-ex; !ok", "## good 2", "ls ext; !ok");
     Eq( scalar(error_list()), "bad 1\ngood 2");
     my @a = error_list();
-    true( @a ~~ ["bad 1", "good 2"] );
+    true( join(",",@a) eq ("bad 1,good 2") );
 
 # macros (TBD: macros with parameters)
     clean();
@@ -332,7 +336,7 @@ END { say "1..$testnum"; }
     $grv = run("ls driver.pm ext t01-basics");
     my @lines = lines();
     true(@lines == 3);
-    true(@lines ~~ [qw(driver.pm ext t01-basics)]);
+    true(join(",",@lines) eq "driver.pm,ext,t01-basics");
 
 # tsh_tempdir
     my @td = ();
@@ -340,9 +344,9 @@ END { say "1..$testnum"; }
     ($a, $b, $c) = test("cd tsh_tempdir; ls -d /tmp/tsh_tempdir.*; cd tsh_tempdir; pwd; put");
     chomp($b);
     # now make sure $b did not exist before (i.e., was not a member of @td)
-    false($b ~~ \@td);
+    false(any { $b eq $_ } @td);
     # and does not exist now
-    try("ls -d $b; /ls: cannot access $b/");
+    try("ls -d $b; /ls: cannot access '$b'/");
     true(rc == 0);
     true(error_count() == 0);
 
@@ -353,7 +357,7 @@ END { say "1..$testnum"; }
     $b = (lines)[0];
     cd;
     # now make sure $b did not exist before (i.e., was not a member of @td)
-    false($b ~~ \@td);
+    false(any { $b eq $_ } @td);
     # and *does* exist now
     try("ls -d $b; !/ls: cannot access $b/");
     true(rc == 0);
@@ -365,7 +369,7 @@ END { say "1..$testnum"; }
     true($b eq (lines)[0]);     # just checking, heh!
 
 # cd -, change to previous directory
-    my @td = ();
+    @td = ();
     try("cd; pwd;") and @td = lines;
     true($ENV{HOME} eq (lines)[0]);
     try("cd -; pwd;") and @td = lines;

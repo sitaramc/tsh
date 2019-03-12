@@ -611,6 +611,10 @@ sub test_tick {
     $tick ||= 1310000000;
     $ENV{GIT_COMMITTER_DATE} = "$tick +0530";
     $ENV{GIT_AUTHOR_DATE}    = "$tick +0530";
+    $ENV{GIT_COMMITTER_NAME} = "tsh tester";
+    $ENV{GIT_AUTHOR_NAME}    = "tsh tester";
+    $ENV{GIT_COMMITTER_EMAIL}= "tsh.tester\@example.com";
+    $ENV{GIT_AUTHOR_EMAIL}   = "tsh.tester\@example.com";
 }
 
 # ----------------------------------------------------------------------
